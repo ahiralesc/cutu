@@ -1,0 +1,204 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <climits>
+// #include <boost/algorithm/string.hpp>
+#include "tclap/CmdLine.h"
+#include "guttaccept.h"
+#include "Event.h"
+#include "csv_buffered_reader.h"
+
+using namespace std;
+using namespace Event;
+using namespace ETrace;
+using namespace TCLAP;
+using namespace boost;
+
+/* The number of rows */
+int num_rows = -1;
+
+
+/* the input file name */
+string in_file{};
+
+
+/* Accepted traces output file name */
+string aos{}; 
+
+
+/* Rejected traces output file name */
+string ros{}; 
+
+
+/**
+*  Parses the Command Line Arguments (CLA). Valid switches for this application are the following:
+*  - r, specifies the number of rows that will be loaded in memory.
+*
+*/
+void parseCLA(int argc, char** argv) {
+    try{
+        // Usage: zcat workload.csv.gz | csv2swf -r 1000 | tee transformed_worload.swf
+        CmdLine cmd("guttaccept (Google cluster Usage Task Accept) extracts complete and incomplete execution traces of tasks stored in GUT-Task format (See Google Cluster Usage Traces: format + schema, pp. 8). guttaccept carries out two phases, localization and evaluation. The first phase finds and integrates each task events. The later phase classifies traces as either complete or incomplete. A trace is complete if it contains the initial event, reaches a final event, and all its event transitions are valid, otherwise it is incomplete. The second phase is carried out after the first phase completes. \n\
+\n\
+Modes of execution: \n\
+\tzcat file.csv.gz | guttaccept -a <accepted trace filename>.json -r <rejected trace filename>.json \n\
+guttaccept -f file.csv -a <accepted trace filename>.json -r <rejected trace filename>.json", ' ', "0.1");
+ 
+        // List of value arguments
+        ValueArg<int> numOfRows("b", "buffer","Number of rows to buffer", false, -1, "int");
+        cmd.add( numOfRows );
+ 
+        ValueArg<string> in_file_name("f", "in_file", "The file name of the Google cluster traces to parse", false, "", "string");
+        cmd.add( in_file_name );
+
+        ValueArg<string> accepted_os("a", "accepted", "The file name where the accepted traces will be stored", true, "accept.json", "string");
+        cmd.add( accepted_os );
+
+        ValueArg<string> rejected_os("r", "rejected", "The file name where the rejected traces will be stored", true, "reject.json", "string");
+        cmd.add( rejected_os );
+
+        // Parse the argumnets
+        cmd.parse( argc, argv );
+        num_rows = numOfRows.getValue();
+        in_file = in_file_name.getValue();
+        aos = accepted_os.getValue();
+        ros = rejected_os.getValue();
+
+        // Set default behaviour
+        if( num_rows == -1 )
+            num_rows = 1000;
+            
+        }catch(ArgException &e) {
+            cerr << "Error: " << e.error() << " for argument " << e.argId() << endl;
+            exit(EXIT_FAILURE);
+        }
+}
+
+
+/**
+*   The main program
+*/
+int main(int argc, char** argv)
+{
+    parseCLA( argc, argv );
+
+    GUTTAccept parser { num_rows, in_file, aos, ros }; 
+    parser.process();
+    
+    return 0;
+}
+
+/**
+*   Coordinates the translation process
+*/
+void GUTTAccept::translate(string &line) {
+
+    TaskEvent ne{line};
+
+    auto it  = traces.equal_range(ne.id);
+    int size = distance( it.first, it.second );
+    
+    if( size == 0) {
+        Trace trace{ne};
+        traces.insert(pair<string,Trace>(ne.id, trace));
+    } else {
+        // One or more traces with task index were found
+        // Select the one with time stamp closest to values[1]
+        long minLength = LLONG_MAX;
+        Trace *trace;
+        for(auto value = it.first; value != it.second; ++value) {
+            Trace *old_trace = &value->second;
+            long length = old_trace->distance(ne);
+            if( length < minLength )
+                trace = old_trace;
+        }
+         
+        // Gets the last registered state
+        TaskEvent le = trace->last_event();
+          
+        // Validate if the transition is valid or not
+        if(validateStateChange(le.event_type,ne.event_type)) {
+            trace->addEvent( ne );
+        } else {
+        // A new trace started
+            Trace trace{ne};
+            traces.insert( pair<string,Trace>( ne.id, trace ));
+        }
+    } 
+}
+
+
+/**
+*   Coordiantes I/O with the translation process 
+*/
+void GUTTAccept::process( )
+{
+    string input_line;
+
+    // Parse the file from a given file
+    if( !in_file.empty() ) {
+        ifstream    fin( in_file );
+
+        if( !fin ) {
+            cerr << "Error: could not open the file" << endl;
+            exit(EXIT_FAILURE);
+        }
+
+        csv_buffered_reader reader{fin, num_rows};
+        do{
+            input_line = reader.next();
+            if( !input_line.empty() )
+                translate( input_line );
+        } while ( !reader.empty() );
+
+         fin.close();
+    } else {
+        // Parse the file from stdin
+        while(cin) {
+            getline( cin, input_line );
+            
+            if( !input_line.empty() )
+                translate( input_line );
+        }
+
+        fflush( stdout );
+    }
+
+
+    ofstream afos( aos );
+    ofstream rfos( ros );
+
+    if( !afos || !rfos ) {
+        cerr << "Error: could not open file for output" << endl;
+        exit(EXIT_FAILURE);
+    }
+    bool fta = true, ftr = true;
+
+    afos << "{\"traces\":[";
+    rfos << "{\"traces\":[";
+
+    // Generating output to files 
+    for( multimap<string,ETrace::Trace>::iterator it = traces.begin();
+        it != traces.end(); ++it ) {
+
+        if( (*it).second.isComplete() )
+            if( fta ) {
+                afos << (*it).second.to_json();
+                fta = false;
+            } else
+                afos << "," << std::endl << (*it).second.to_json();
+        else
+            if( ftr ) {
+                rfos << (*it).second.to_json();
+                ftr = false;
+            } else
+                rfos << "," << std::endl << (*it).second.to_json();
+    }
+
+    afos << "]}";
+    rfos << "]}";
+    
+    afos.close();
+    rfos.close();
+}
