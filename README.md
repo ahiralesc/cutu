@@ -1,13 +1,14 @@
-# Cluster Usage Trace utilities (CUTu)
-
-The CUTu utilities were design to extract and prepare data for the following file formats:
-- GCUT, [Google Cluster Usage Traces](https://github.com/google/cluster-data)
-- SWF, [Standard Workload Archive](http://www.cs.huji.ac.il/labs/parallel/workload/logs.html), Standard Workload Format (SWF) workloads.
-- GSWF, [Grid Workload Archive](http://gwa.ewi.tudelft.nl/), Grid Workload Format (GWF) workloads.
+Cluster Usage Trace utilities (CUT-Utilities)
 
 
-We are rewriting much of the code from Java to C++ and building workload support for data extraction and analysis of the previous formatted workloads.
+CUT utilities have been design to extract, process, transform, and analyze job and task execution traces. We are adding functionality for several formats:
+-   GCUT, [Google Cluster Usage Traces](https://github.com/google/cluster-data)
+-   SWF, [Standard Workload Format](http://www.cs.huji.ac.il/labs/parallel/workload/logs.html)
+-   GSWF, [Grid Standard Workload Format](http://gwa.ewi.tudelft.nl/)
 
-Project collaborator include:
-- Adan Hirales Carbajal, ahiralesc at gmail.com
-- Vincent Bernard Bloom, vincent.bloom at hotmail.com
+Most of the code for processing SWF files was written in Java. 
+
+Project collaborators include:
+-   Adan Hirales-Carbajal, ahiralesc@gmail.com
+-   Vincent Bernard Bloom, vincent.bloom@hotmail.com
+
