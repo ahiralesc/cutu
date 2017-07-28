@@ -1,4 +1,4 @@
-# Cluster Usare Trace utilities (CUTu)
+# Cluster Usage Trace utilities (CUTu)
 
 The CUTu utilities were design to extract and prepare data for the following file formats:
 - GCUT, [Google Cluster Usage Traces](https://github.com/google/cluster-data)
