@@ -25,4 +25,4 @@ add_executable(guttaccept ${SOURCES})
 target_link_libraries(guttaccept ${PROJECT_LINK_LIBS})
 
 # The location were the binary will be install
-install(TARGETS guttaccept DESTINATION /home/ahiralesc/mysrc/cpp/guct/bin)
+install(TARGETS guttaccept DESTINATION /home/ahiralesc/mysrc/cpp/cutu/bin)

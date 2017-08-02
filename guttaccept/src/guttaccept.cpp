@@ -138,21 +138,12 @@ void GUTTAccept::process( )
 
     // Parse the file from a given file
     if( !in_file.empty() ) {
-        ifstream    fin( in_file );
-
-        if( !fin ) {
-            cerr << "Error: could not open the file" << endl;
-            exit(EXIT_FAILURE);
-        }
-
-        csv_buffered_reader reader{fin, num_rows};
+        csv_buffered_reader reader{in_file, num_rows};
         do{
             input_line = reader.next();
             if( !input_line.empty() )
                 translate( input_line );
         } while ( !reader.empty() );
-
-         fin.close();
     } else {
         // Parse the file from stdin
         while(cin) {
