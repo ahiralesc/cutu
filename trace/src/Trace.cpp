@@ -190,6 +190,7 @@ string ETrace::Trace::to_json() const
     "\"job_id\":" +     std::to_string(jid) + ","
     "\"user_name\":\"" +  user + "\","
     "\"uuid\":\"" + uuid + "\","
+    "\"timestamp\":" + std::to_string(startTime) + ","
     "\"events\": [" +   ev +
     "]," +
     resources.to_json() +

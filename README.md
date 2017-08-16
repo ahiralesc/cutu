@@ -11,4 +11,3 @@ Most of the code for processing SWF files was written in Java.
 Project collaborators include:
 -   Adan Hirales-Carbajal, ahiralesc@gmail.com
 -   Vincent Bernard Bloom, vincent.bloom@hotmail.com
-

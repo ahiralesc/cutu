@@ -40,7 +40,7 @@ void parseCLA(int argc, char** argv) {
         ValueArg<string> in_file("i", "in_file", "JSON trace file", false, "", "string");
         cmd.add( in_file );
 
-        ValueArg<string> out_file("o", "out_file", "CSV file with extracted parameters", true, "extracted.json", "string");
+        ValueArg<string> out_file("o", "out_file", "CSV file with extracted parameters", true, "extracted_traces.json", "string");
         cmd.add( out_file );
 
         // Parse the argumnets

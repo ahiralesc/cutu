@@ -121,8 +121,13 @@ void JTraceSort::process( )
         }
 
         fos << "{\"traces\":[";
-        for(unsigned int i=0; i<straces.size(); i++) 
-            fos << straces[i];
+        for(unsigned int i=0; i<straces.size(); i++){
+            if(i == 0) {
+                fos << straces[i];
+            } else {
+                fos << "," << straces[i];
+            }
+        }
         fos << "]}";
         fos.close();
     }
