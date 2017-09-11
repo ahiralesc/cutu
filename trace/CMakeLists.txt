@@ -23,6 +23,7 @@ install(TARGETS trace LIBRARY DESTINATION /home/ahiralesc/mysrc/cpp/cutu/jtraces
 install(TARGETS trace LIBRARY DESTINATION /home/ahiralesc/mysrc/cpp/cutu/jgutt2swf/lib )
 install(TARGETS trace LIBRARY DESTINATION /home/ahiralesc/mysrc/cpp/cutu/jeventmerge/lib )
 install(TARGETS trace LIBRARY DESTINATION /home/ahiralesc/mysrc/cpp/cutu/jtracemerge/lib )
+install(TARGETS trace LIBRARY DESTINATION /home/ahiralesc/mysrc/cpp/cutu/lib )
 # install(TARGETS trace LIBRARY DESTINATION ../../lib )
 
 # Uncomment to enable unit test cases

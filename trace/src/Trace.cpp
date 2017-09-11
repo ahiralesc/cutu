@@ -182,12 +182,15 @@ void ETrace::Trace::addEvent(const TaskEvent &event)
 string ETrace::Trace::to_json() const 
 {
     unsigned long long minStartTime = ULLONG_MAX;
+    string user_name;
   
     string ev;
     for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++) {
         unsigned long long ts = it->timeStamp();
-        if( ts < minStartTime )
+        if( ts < minStartTime ) {
             minStartTime = ts;
+            user_name = it->user_name;
+        }
         ev += it->to_json() + ",";
     }
     ev.pop_back(); 
