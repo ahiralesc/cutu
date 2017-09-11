@@ -1,4 +1,7 @@
 #!/bin/bash
-../build/jtraceextract -i ../../bin/unsorted.json -o extracted_traces.csv
-#sort -t ',' -k2n -k3n extracted_traces.csv > sorted_traces.csv
-#../build/jtracesort -i ../../bin/unsorted.json -s sorted_traces.csv -o sorted.json
+INFILE=${1}
+FILENAME=${1##*/}
+
+jtraceextract -i ${INFILE} -o ${INFILE}.csv
+#sort -t ',' -k3n -k2n ${INFILE}.csv > ${INFILE}.csv
+#jtracesort -i $INFILE -s $(INFILE)_sorted.csv -o $INFILE.json

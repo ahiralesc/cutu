@@ -15,6 +15,7 @@ limitations under the License.
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <climits>
 // #include <typeinfo> for type(variable).name()
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -115,7 +116,8 @@ ETrace::Trace::Trace(const string &json)
     jid = d["job_id"].GetUint64();
     user = d["user_name"].GetString();
     uuid = d["uuid"].GetString();
-    startTime = d["events"][0]["timestamp"].GetUint64();
+    startTime = d["timestamp"].GetUint64();
+    //startTime = d["events"][0]["timestamp"].GetUint64();
 
     int i = 0;
 
@@ -179,9 +181,15 @@ void ETrace::Trace::addEvent(const TaskEvent &event)
 
 string ETrace::Trace::to_json() const 
 {
+    unsigned long long minStartTime = ULLONG_MAX;
+  
     string ev;
-    for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++)
+    for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++) {
+        unsigned long long ts = it->timeStamp();
+        if( ts < minStartTime )
+            minStartTime = ts;
         ev += it->to_json() + ",";
+    }
     ev.pop_back(); 
     
     string json =
@@ -190,7 +198,7 @@ string ETrace::Trace::to_json() const
     "\"job_id\":" +     std::to_string(jid) + ","
     "\"user_name\":\"" +  user + "\","
     "\"uuid\":\"" + uuid + "\","
-    "\"timestamp\":" + std::to_string(startTime) + ","
+    "\"timestamp\":" + std::to_string(minStartTime) + ","
     "\"events\": [" +   ev +
     "]," +
     resources.to_json() +
