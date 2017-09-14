@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2017 The CUTU Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,16 +20,20 @@
 # Author: Adan Hirales Carbal
 # Email : ahiralesc@gmail.com
 #
-# Note: You must change some paths to use this code.
-#
 ###########################################################################
 
+# Prepare the execution context
 
-#!/bin/bash
-INPUT=$1
-ACCEPT=${2%.*}-${1%%.*}.${2#*.}
-REJECT=${3%.*}-${1%%.*}.${3#*.}
-zcat /home/ahiralesc/workload/google/task_events/$INPUT | \
-/home/ahiralesc/mysrc/cpp/guct/bin/guttaccept \
--a /home/ahiralesc/workload/guct/accepted/$ACCEPT \
--r /home/ahiralesc/workload/guct/rejected/$REJECT
+# Export the location of shared library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/ahiralesc/mysrc/cpp/cutu/lib"
+
+# Export path to binaries
+export PATH="/home/ahiralesc/mysrc/cpp/cutu/bin:$PATH"
+
+# Prepare I/O paths
+SPATH=$1
+TPATH=$2
+ACCEPTED=${TPATH}${3%%.*}-${4%.*}.${4#*.}
+REJECTED=${TPATH}${3%%.*}-${5%.*}.${5#*.}
+
+zcat $SPATH | guttaccept -a $ACCEPTED -r $REJECTED

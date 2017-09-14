@@ -31,9 +31,11 @@
 
 Universe    = vanilla
 Executable  = guttaccept.sh
-Accepted    = accepted.json
-Rejected    = rejected.json
-Arguments   = "$Fnx(FILE) $(Accepted) $(Rejected)"
+Accepted_prefix    = accepted.json
+Rejected_prefix    = rejected.json
+Target_path = /home/ahiralesc/cutu/guttaccept/
+Arguments   = "$(FILE) $(Target_path) $Fnx(FILE) $(Accepted_prefix) $(Rejected_prefix)"
+request_memory = 900
 Output      = /home/ahiralesc/runtime/guct/out/guttaccept_$Fnx(FILE).out
 Log         = /home/ahiralesc/runtime/guct/logs/guttaccept_$Fnx(FILE).log
 Error       = /home/ahiralesc/runtime/guct/error/guttaccept_$Fnx(FILE).error
