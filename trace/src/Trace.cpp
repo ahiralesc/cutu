@@ -16,7 +16,6 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <climits>
-// #include <typeinfo> for type(variable).name()
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -27,23 +26,11 @@ limitations under the License.
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/stringbuffer.h"
 
-
 using namespace std;
 using namespace boost;
 using namespace Event;
 using namespace ETrace;
 using namespace rapidjson;
-
-/*
-ETrace::AvgAllocResources::AvgAllocResources() 
-{
-    num_req_cores{};
-    num_req_ram{};
-    num_req_disk{};
-    sum_norm_req_cores{};
-    sum_norm_req_ram{};
-    sum_norm_req_disk{}; 
-};*/
 
 
 void ETrace::AvgAllocResources::add(const TaskEvent &ev ) 
@@ -80,44 +67,17 @@ string ETrace::AvgAllocResources::to_json() const
     return json;
 };
 
-/*
-ETrace::Trace::Trace() 
-{
-    _empty = true;
-};*/
-
-
-ETrace::Trace::Trace(const TaskEvent &event) 
-{
-    lre = event;
-    events.insert(event);
-    resources.add(event);
-    tid  = event.id;
-    jid  = event.job_id;
-    event_bs.none();
-    event_bs.set(static_cast<int>(EventType::submit));
-
-    // Assign a UUID (Boost)
-    boost::uuids::uuid uid = uuids::random_generator()();
-    uuid = boost::uuids::to_string(uid);
-
-    // Empty
-    _empty = false;
-};
-
 
 ETrace::Trace::Trace(const string &json) 
 {
     Document d;
     d.Parse(json.c_str());
-    event_bs.none();
 
     tid = d["trace_id"].GetString();
     jid = d["job_id"].GetUint64();
     user = d["user_name"].GetString();
     uuid = d["uuid"].GetString();
     startTime = d["timestamp"].GetUint64();
-    //startTime = d["events"][0]["timestamp"].GetUint64();
 
     int i = 0;
 
@@ -150,33 +110,148 @@ ETrace::Trace::Trace(const string &json)
         str += to_string(d["events"][i]["constraints"].GetBool());
 
         TaskEvent event{str};
-        addEvent(event);
+        insert(event);
         i++;
     }
-    // Empty
-    _empty = false;
-}
+};
 
 
-long ETrace::Trace::distance(const TaskEvent &ne) 
-{
-    return abs( lre.timeStamp() - ne.timeStamp() );
-}
+bool ETrace::Trace::empty() {
+    return (events.size() <= 0)? true : false;
+};
 
 
-TaskEvent& ETrace::Trace::last_event() 
-{
-    return lre;
-}
+unsigned int Etrace::Trace::size() {
+    return events.size();
+};
 
 
-void ETrace::Trace::addEvent(const TaskEvent &event)
-{
-    lre = event;
+void ETrace::Trace::insert(const TaskEvent &event) {
+    if( empty() ) {
+        jid  = event.job_id;
+        tid  = event.id;
+        user = event.user;
+        // startTime is set when the trace is sent to persistence
+        boost::uuids::uuid uid = uuids:random_generator()();
+        uuid = boost::uuids::to_string(uid);
+    }
     events.insert(event);
     resources.add(event);
-    event_bs.set(reindex(event.event_type));
+};
+
+
+void ETrace::Trace::clear() {
+    jid{};
+    tid{};
+    user{};
+    uuid{};
+    startTime{};
+    events.clear();
+    resources{};
+};
+
+
+// The UUID of the parameter trace is lost
+bool ETrace::Trace::merge(Trace &trace) {
+    if( jid != trace.get_jid() ) 
+        return false;
+    
+    events.insert(other.events.begin(),other.events.end());
+    // Startime is set when the trace is sent to persistance
+    return true;
+};
+
+
+TaskEvent& ETrace::Trace::last_event() {
+    if( !empty() ) {
+        std::vector<Event::TaskEvent> ev(events.begin(), events.end());
+        return ev[va.size()];
+    } 
+    return nullptr;
+};
+
+
+bool ETrace::Trace::validateEvent(Event::EventType etype) {
+    auto search = events.find(etype);
+    if(search != events.end())
+        return true;
+    return false;
+};
+
+
+bool ETrace::Trace::evicted(){
+    return validateEvent(EventType::evict);
+};
+
+
+bool ETrace::Trace::_failed(){
+    return validateEvent(EventType::fail);
+};
+
+
+bool ETrace::Trace::finished(){
+    return validateEvent(EventType::finish);
+};
+
+
+bool ETrace::Trace::completed(){
+    return (lastEvent() == EventType::finish);
+};
+
+
+bool ETrace::Trace::killed(){
+    return validateEvent(EventType::kill);
+};
+
+
+bool ETrace::Trace::lost() {
+    return validateEvent(EventType::lost);
+};
+
+
+/**
+*   @brief  A trace is complete if it begins with a submmit event,
+*        reaches one of the following events {evicted, fail, finish, kill, or lost}
+*        and all its transitions are valid.   
+*  
+*   @return true is the trace is complete, false otherwise 
+*/
+bool ETrace::Trace::isComplete() {
+    std::vector<Event::TaskEvent> event(events.begin(), events.end());
+    unsigned sz = event.size();
+    if(event[0] != EventType::submit)
+        return false;
+    auto search = FinalEvents.find(event[sz]);
+    if( search != FinalEvents.end() )
+        retunr false;
+    for(unsigned i=0; i<sz; i++)
+        if(!validateTransition(event[i],event[i+1])
+            return false;
+    return true;
 }
+
+
+/**
+*   @brief A trace is resubmutted if at least one of the following transitions exists
+*           evict to submit
+*           fail to submit
+*           finish to submit
+*           kill to submit
+*           lost to submit
+*   The method does not analyse the number ot times the job was resubmitted
+*/
+bool ETrace::Trace::isResubmitted() {
+    std::vector<Event::TaskEvent> event(events.beging(),events.end());
+    unsigned sz = FinalEvents.size();
+    for(unsigned i=0; i<=sz; i++) {
+        auto search = event.find(FinalEvent[i]);
+        if( search!= event.end())
+            if(event[search+1] == EventType::submit)
+                return true; 
+    }
+    return false;
+}
+
 
 
 string ETrace::Trace::to_json() const 

@@ -64,7 +64,7 @@ private:
     AvgAllocResources resources{};  // Avrg. Allocated resources
     std::set<Event::TaskEvent,Event::Event_Comparator> events; // Task events. They are assumed to be in temporal order
 
-    bool validateEvent(Event::EventType event);
+    bool validateEvent(Event::EventType);
 
 public:
     // Constructor: Constructs an empty Trace
@@ -86,8 +86,7 @@ public:
     void clear();
 
     // Modifier: merge events of this trace with that of another
-    void merge(Trace&);
-
+    bool merge(Trace&);
 
     // Operation: gets the last inserted event
     Event::TaskEvent& last_event();
@@ -134,8 +133,7 @@ public:
     std::string to_json() const;
 };
 
-
-
+    
     struct StartTimeComparator {
         bool operator()(const Trace& t1, const Trace& t2){
             return t1.startTime < t2.startTime;

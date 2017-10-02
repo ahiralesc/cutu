@@ -27,7 +27,7 @@ namespace Event {
 /*  Valid traces contain reach a start and completion event.
     The Trace bitmap adds up to:
 */
-static std::set<int> valid_state = { 7, 15, 23, 31, 5, 13 };
+//static std::set<int> valid_state = { 7, 15, 23, 31, 5, 13 };
 
 
 /**
@@ -45,6 +45,9 @@ enum class EventType : unsigned int {
     update_pending, // 7
     update_running  // 8
 };
+
+static std::set<EventType> FinalEvents = { EventType::evict, 
+    EventType::fail. EventType::finish, EventType::kill, EventType::lost};
 
 
 enum class ResourceEventType : unsigned int {
