@@ -11,6 +11,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ============================================================================= */
 
+/**
+*   @file Trace.cpp
+*   @section DESCRIPTION
+*    
+*   A container for task events. A trace can empty or contain one or more events. 
+*   A trace is complete if it begins with a start event, ends with an finalization 
+*   event, and all event transitions are valid.
+*
+*   @author Adan Hirales Carbajal, Vincent Bernard Bloom
+*   @version 1.0 
+*   @date 10/01/17 
+*/
+
 #ifndef _TRACE__
 #define _TRACE__
 
@@ -21,71 +34,105 @@ limitations under the License.
 
 namespace ETrace {
 
+/**
+* @brief Class that maintains the Avrg. Allocated resources 
+*/
 class AvgAllocResources {
-    public :
-        // For book keeping. They dont represent allocated resources
-        int num_req_cores;
-        int num_req_ram;
-        int num_req_disk;
-        float sum_norm_req_cores;
-        float sum_norm_req_ram;
-        float sum_norm_req_disk;
-
-        AvgAllocResources();
-        void add(const Event::TaskEvent&);
-        std::string to_json() const;
-};
-
-
-class Trace {
-    /* Bitwise representations of the registered events */ 
-    std::bitset<5> event_bs;
+public :
+    unsigned int num_req_cores{};
+    unsigned int num_req_ram{};
+    unsigned int num_req_disk{};
+    unsigned float sum_norm_req_cores{};
+    unsigned float sum_norm_req_ram{};
+    unsigned float sum_norm_req_disk{};
     
-    /* The last registered event (lre) */
-    Event::TaskEvent lre{};
+    //AvgAllocResources() = default;
+    void add(const Event::TaskEvent&);
+    std::string to_json() const;
+};
+ 
+/**
+* @brief Class that stores task events
+*/
+class Trace {
+private:
+    unsigned long long jid{};       // Job ID (the task container) 
+    std::string tid;                // Task id
+    std::string user;               // Job owner
+    std::string uuid;               // The trace UUID. Merging traces may replace the uuid
+    unsigned long long startTime{}; // Timestamp of the first trace event
+    AvgAllocResources resources{};  // Avrg. Allocated resources
+    std::set<Event::TaskEvent,Event::Event_Comparator> events; // Task events. They are assumed to be in temporal order
 
-    /* The trace events */
-    std::set<Event::TaskEvent,Event::Event_Comparator> events;
+    bool validateEvent(Event::EventType event);
 
-    AvgAllocResources resources{};
+public:
+    // Constructor: Constructs an empty Trace
+    Trace() = default;
 
-    bool _empty;
+    // Constructor: Transforms a JSON formatted string to a Trace
+    Trace(const std::string&);
 
-    public :
+    // Capacity: Test if the container is empty
+    bool empty();
 
-        unsigned long long jid;
-        unsigned long long startTime;
-        std::string tid;
-        std::string user;
-        std::string uuid;
-        
-        /* Class constructor */
-        Trace(const Event::TaskEvent&);
-        Trace(const std::string&);
-        Trace();
-        /* Elapse time between two task events */
-        long distance(const Event::TaskEvent&);
-        
-        /* Returns the last registered event */
-        Event::TaskEvent& last_event();
-        
-        /* Adds an event */
-        void addEvent(const Event::TaskEvent&);
-        
-        /* Coverterts */
-        std::string to_json() const;
-        
-        /* Returns the trace id */
-        std::string id() const;
-        
-        /* Merge events of this trace with that given */
-        bool merge(Trace&);
-        
-        /* Validates if a trace is complete or incomplete */
-        bool isComplete();
+    // Capacity: Return the number of stored events
+    int size();
 
-        bool empty();
-    };
+    // Modifier: insert an element (event)
+    void insert(const Event::TaskEvent& );
+
+    // Modifier: erase 
+    void clear();
+
+    // Modifier: merge events of this trace with that of another
+    void merge(Trace&);
+
+
+    // Operation: gets the last inserted event
+    Event::TaskEvent& last_event();
+
+    // Operation: gets the trace job id
+     unsigned long long get_jid() { return jid; }
+
+    // Operation: gets the task id
+    std::string get_tid() { return tid; }
+
+    // Operation: gets the trace uuid
+    std::string get_uuid() { return uuid; } 
+
+    // Operation: gets the trace start time
+    unsigned long long get_start_time() { return startTime; }
+
+    // Operation: returns true if the trace was evicted, otherwise false
+    bool evicted();
+
+    // Operation: returns true if the trace failed, otherswise false
+    bool _failed();
+
+    // Operation: returns true if the trace finished, otherwise false
+    bool finished();
+
+    // Operation: returns true if the trace completed, otherwise false
+    //            Completion means the trace reached a final event
+    bool completed();
+
+    // Operation: returns true if the trace was killed, otherwise false
+    bool killed();
+
+    // Operation: returns true if the trace was lost, otherwise false
+    bool lost();
+
+    // Operation: returns true if the trace is complete.
+    // A trace is complete if its first event is an initial, reaches a final event, and all state transitions are valid
+    bool isComplete();
+
+    // Operation: returns true is the trace was resubmitted, otherwise false
+    bool isResubmitted();
+        
+    // Operation: transforms the object to a JSON formatted string
+    std::string to_json() const;
+};
 
 
 

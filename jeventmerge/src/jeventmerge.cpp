@@ -67,8 +67,8 @@ int main(int argc, char** argv)
 {
     parseCLA(argc,argv);
 
-//    JEventMerge parser{in_file, aos, ros};
- //   parser.process();
+    JEventMerge parser{in_file, aos, ros};
+    parser.process();
 
     return 0;
 } 
@@ -79,30 +79,39 @@ void JEventMerge::process()
 {
     const int num_traces = 100;
     glob_t glob_result;
+
     glob(infile.c_str(), GLOB_TILDE, NULL ,&glob_result);
-    bitset<200> available_readers;
+    bitset<200> available_readers{false};
     
     // Load buffered JSON readers 
     available_readers.none();
     for(unsigned int i=0; i<glob_result.gl_pathc; ++i){
         available_readers.set(i);
         logs.push_back(JSONTraceBuffIOS(glob_result.gl_pathv[i],num_traces));    
+        std::cout << "Bitacora cargada : " << glob_result.gl_pathv[i] << std::endl;
     }
+    std::cout << "Check point one" << std::endl;
     
     while(available_readers.any()){
         
         // Prepare the priority queue
         for(int i=0; i<logs.size(); ++i){
-            if(logs[i].empty())
+            std::cout << "Check point two " << i << std::endl;
+            if(logs[i].empty()) {
                 available_readers.reset(i);
-            else {
+                std::cout << "Resetted : " << i << std::endl;
+            }else {
                 int count{0};
                 while(!logs[i].empty() && count < num_traces) {
-                    queue.push(logs[i].next());
+                    Trace trace = logs[i].next();
+                    std::cout << "Trace : " << trace.to_json() << std::endl;
+                    queue.push(trace);
                     count++;
                 }
             }
+            std::cout << "Tamano : " << logs.size() << std::endl;
         } 
+        std::cout << "Check point three\n";
 
         // Merge traces with existing traces.
         while(!queue.empty()) {
@@ -110,23 +119,17 @@ void JEventMerge::process()
             queue.pop();
 
             string id = trace.tid;
+            cout << "Trace id is " << id << std::endl;
             map<string,Trace>::iterator it = traces.find(id);
             if(it != traces.end()) {
-                if(traces[id].merge(trace))
-                    if(traces[id].isComplete()){
-                        completeTraces.push_back(traces[id].to_json());
-                        traces.erase(it);
-                    }
-                else {
-                    // Trace could not be merged. Start a new trace
-                    incompleteTraces.push_back(traces[id].to_json());
-                    traces[id] = trace;
+                traces[id].merge(trace);
+                if(traces[id].isComplete()){
+                    completeTraces.push_back(traces[id].to_json());
+                    traces.erase(it);
                 }
-            } else //Start a new trace entry
+            }else
                 traces[id] = trace;
         }
-
-        // Flush complete traces if at least X has been created.
     }
 
 

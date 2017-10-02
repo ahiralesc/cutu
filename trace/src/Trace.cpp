@@ -34,16 +34,16 @@ using namespace Event;
 using namespace ETrace;
 using namespace rapidjson;
 
-
+/*
 ETrace::AvgAllocResources::AvgAllocResources() 
 {
-    num_req_cores = 0;
-    num_req_ram   = 0;
-    num_req_disk  = 0;
-    sum_norm_req_cores = 0;
-    sum_norm_req_ram   = 0;
-    sum_norm_req_disk  = 0; 
-};
+    num_req_cores{};
+    num_req_ram{};
+    num_req_disk{};
+    sum_norm_req_cores{};
+    sum_norm_req_ram{};
+    sum_norm_req_disk{}; 
+};*/
 
 
 void ETrace::AvgAllocResources::add(const TaskEvent &ev ) 
@@ -80,11 +80,11 @@ string ETrace::AvgAllocResources::to_json() const
     return json;
 };
 
-
+/*
 ETrace::Trace::Trace() 
 {
     _empty = true;
-};
+};*/
 
 
 ETrace::Trace::Trace(const TaskEvent &event) 
@@ -216,7 +216,7 @@ string ETrace::Trace::id() const
     return tid;
 }
 
-
+/*
 bool ETrace::Trace::merge(Trace &other) 
 {
     TaskEvent e1 = *events.rbegin();
@@ -229,6 +229,35 @@ bool ETrace::Trace::merge(Trace &other)
     }
     
     return false;
+} */
+
+/* 
+    Merging occurs if
+    - Adyacent events produce valid transitions and their timing is increasing
+*/
+void ETrace::Trace::merge(Trace &other)
+{
+    // Merge the two lists and sort events in increasing order by timestamp
+    events.insert(other.events.begin(),other.events.end());
+    if( (event_bs[0] == other.event_bs[0]) && !resubmission )
+        resubmission = true;
+    std::vector<Event::TaskEvent> va(events.begin(), events.end());
+    int sz = va.size();
+    // Find last submit event
+    unsigned k = 0;
+    for(unsigned i=sz; i>0; i--){
+        if(va[i].event_type == Event::EventType::submit) {
+            k = i;
+            break;
+        }
+    }
+    std::bitset<5> bs{false};
+
+    for(unsigned i=k; i<=sz; i++) {
+        bs.set(reindex(va[i].event_type));
+    }
+    event_bs.reset();
+    event_bs |= bs;
 }
 
 
