@@ -46,8 +46,7 @@ enum class EventType : unsigned int {
     update_running  // 8
 };
 
-static std::set<EventType> FinalEvents = { EventType::evict, 
-    EventType::fail. EventType::finish, EventType::kill, EventType::lost};
+static std::set<EventType> FinalEvents = { EventType::evict, EventType::fail, EventType::finish, EventType::kill, EventType::lost};
 
 
 enum class ResourceEventType : unsigned int {

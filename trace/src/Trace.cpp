@@ -51,6 +51,15 @@ void ETrace::AvgAllocResources::add(const TaskEvent &ev )
     }
 };
 
+void ETrace::AvgAllocResources::clear() {
+    num_req_cores = 0;
+    num_req_ram = 0;
+    num_req_disk = 0;
+    sum_norm_req_cores = 0.0;
+    sum_norm_req_ram = 0.0;
+    sum_norm_req_disk = 0.0;
+};
+
 
 string ETrace::AvgAllocResources::to_json() const 
 {
@@ -121,7 +130,7 @@ bool ETrace::Trace::empty() {
 };
 
 
-unsigned int Etrace::Trace::size() {
+unsigned int ETrace::Trace::size() {
     return events.size();
 };
 
@@ -130,9 +139,9 @@ void ETrace::Trace::insert(const TaskEvent &event) {
     if( empty() ) {
         jid  = event.job_id;
         tid  = event.id;
-        user = event.user;
+        user = event.user_name;
         // startTime is set when the trace is sent to persistence
-        boost::uuids::uuid uid = uuids:random_generator()();
+        boost::uuids::uuid uid = uuids::random_generator()();
         uuid = boost::uuids::to_string(uid);
     }
     events.insert(event);
@@ -141,13 +150,13 @@ void ETrace::Trace::insert(const TaskEvent &event) {
 
 
 void ETrace::Trace::clear() {
-    jid{};
-    tid{};
-    user{};
-    uuid{};
-    startTime{};
+    jid = -1;
+    tid.clear();
+    user.clear();
+    uuid.clear();
+    startTime = -1;
     events.clear();
-    resources{};
+    resources.clear();
 };
 
 
@@ -156,25 +165,28 @@ bool ETrace::Trace::merge(Trace &trace) {
     if( jid != trace.get_jid() ) 
         return false;
     
-    events.insert(other.events.begin(),other.events.end());
+    events.insert(trace.events.begin(),trace.events.end());
     // Startime is set when the trace is sent to persistance
     return true;
 };
 
-
+// Returns an empty object if not found
 TaskEvent& ETrace::Trace::last_event() {
+    Event::TaskEvent event;
+
     if( !empty() ) {
         std::vector<Event::TaskEvent> ev(events.begin(), events.end());
-        return ev[va.size()];
+        return ev[ev.size()];
     } 
-    return nullptr;
+    return event;
 };
 
 
 bool ETrace::Trace::validateEvent(Event::EventType etype) {
-    auto search = events.find(etype);
-    if(search != events.end())
-        return true;
+    for(Event::TaskEvent tev : events) {
+        if( tev.event_type == etype )
+            return true;
+    }
     return false;
 };
 
@@ -208,14 +220,13 @@ bool ETrace::Trace::lost() {
     return validateEvent(EventType::lost);
 };
 
-
-/**
+/*
 *   @brief  A trace is complete if it begins with a submmit event,
 *        reaches one of the following events {evicted, fail, finish, kill, or lost}
 *        and all its transitions are valid.   
 *  
 *   @return true is the trace is complete, false otherwise 
-*/
+
 bool ETrace::Trace::isComplete() {
     std::vector<Event::TaskEvent> event(events.begin(), events.end());
     unsigned sz = event.size();
@@ -231,7 +242,7 @@ bool ETrace::Trace::isComplete() {
 }
 
 
-/**
+
 *   @brief A trace is resubmutted if at least one of the following transitions exists
 *           evict to submit
 *           fail to submit
@@ -239,7 +250,7 @@ bool ETrace::Trace::isComplete() {
 *           kill to submit
 *           lost to submit
 *   The method does not analyse the number ot times the job was resubmitted
-*/
+
 bool ETrace::Trace::isResubmitted() {
     std::vector<Event::TaskEvent> event(events.beging(),events.end());
     unsigned sz = FinalEvents.size();
@@ -286,66 +297,4 @@ string ETrace::Trace::to_json() const
 }
 
 
-string ETrace::Trace::id() const 
-{
-    return tid;
-}
-
-/*
-bool ETrace::Trace::merge(Trace &other) 
-{
-    TaskEvent e1 = *events.rbegin();
-    TaskEvent e2 = *other.events.begin();
-    
-    if( validateStateChange( e1.event_type, e2.event_type) && e1.timeStamp() < e2.timeStamp() ) {
-        event_bs = event_bs |= other.event_bs;
-        events.insert(other.events.begin(), other.events.end());
-        return true;
-    }
-    
-    return false;
-} */
-
-/* 
-    Merging occurs if
-    - Adyacent events produce valid transitions and their timing is increasing
 */
-void ETrace::Trace::merge(Trace &other)
-{
-    // Merge the two lists and sort events in increasing order by timestamp
-    events.insert(other.events.begin(),other.events.end());
-    if( (event_bs[0] == other.event_bs[0]) && !resubmission )
-        resubmission = true;
-    std::vector<Event::TaskEvent> va(events.begin(), events.end());
-    int sz = va.size();
-    // Find last submit event
-    unsigned k = 0;
-    for(unsigned i=sz; i>0; i--){
-        if(va[i].event_type == Event::EventType::submit) {
-            k = i;
-            break;
-        }
-    }
-    std::bitset<5> bs{false};
-
-    for(unsigned i=k; i<=sz; i++) {
-        bs.set(reindex(va[i].event_type));
-    }
-    event_bs.reset();
-    event_bs |= bs;
-}
-
-
-bool ETrace::Trace::isComplete() 
-{
-    int val = (int) event_bs.to_ulong();
-    auto search = valid_state.find(val);
-    if( search != valid_state.end())
-        return true;
-    return false;
-}
-
-bool ETrace::Trace::empty() 
-{
-    return _empty;
-}

@@ -42,12 +42,13 @@ public :
     unsigned int num_req_cores{};
     unsigned int num_req_ram{};
     unsigned int num_req_disk{};
-    unsigned float sum_norm_req_cores{};
-    unsigned float sum_norm_req_ram{};
-    unsigned float sum_norm_req_disk{};
+    float sum_norm_req_cores{};
+    float sum_norm_req_ram{};
+    float sum_norm_req_disk{};
     
     //AvgAllocResources() = default;
     void add(const Event::TaskEvent&);
+    void clear();
     std::string to_json() const;
 };
  
@@ -60,7 +61,7 @@ private:
     std::string tid;                // Task id
     std::string user;               // Job owner
     std::string uuid;               // The trace UUID. Merging traces may replace the uuid
-    unsigned long long startTime{}; // Timestamp of the first trace event
+    unsigned long long startTime;   // Timestamp of the first trace event
     AvgAllocResources resources{};  // Avrg. Allocated resources
     std::set<Event::TaskEvent,Event::Event_Comparator> events; // Task events. They are assumed to be in temporal order
 
@@ -77,7 +78,7 @@ public:
     bool empty();
 
     // Capacity: Return the number of stored events
-    int size();
+    unsigned int size();
 
     // Modifier: insert an element (event)
     void insert(const Event::TaskEvent& );
@@ -131,12 +132,16 @@ public:
         
     // Operation: transforms the object to a JSON formatted string
     std::string to_json() const;
+
+    unsigned long long time_stamp() {
+        return startTime;
+    }
 };
 
     
     struct StartTimeComparator {
-        bool operator()(const Trace& t1, const Trace& t2){
-            return t1.startTime < t2.startTime;
+        bool operator()(Trace& t1, Trace& t2){
+            return t1.time_stamp() < t2.time_stamp();
         }
     };
 }
