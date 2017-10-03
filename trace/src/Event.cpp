@@ -21,19 +21,11 @@ using namespace boost;
 using namespace std;
 
 
-Event::Event::Event() { };
-
-
-Event::Event::Event(unsigned long long time_stamp) : 
-    timestamp {time_stamp} { };
-
 
 unsigned long long Event::Event::timeStamp() const{
     return timestamp;
 };
 
-
-Event::TaskEvent::TaskEvent() : Event() { };
 
 
 Event::TaskEvent::TaskEvent(const std::string& line) : Event() {
@@ -199,33 +191,7 @@ string Event::ResourceEvent::to_json() const {
 }
 
 
-
-// TODO: Deprecated
-//Event::Event::Event() { }
-
-/*
-Espc::Event::Event(const string &str, const long instance ) : 
-    tstamp{instance} {
-    etype = static_cast<EventType>(stoi(str));
-}
-
-Espc::Event::Event(const EventType event, const long instance ) : 
-    etype{event},
-    tstamp{instance} { }
-    
-
-
-long Espc::Event::timestamp() const {
-    return tstamp;
-}
-
-
-Espc::EventType Espc::Event::type() const{
-    return etype;
-}
-*/
-
-bool Event::validateStateChange(EventType current, EventType next) {
+bool Event::validateEventChange(EventType current, EventType next) {
     bool result;
     
     switch(current) {
@@ -242,7 +208,6 @@ bool Event::validateStateChange(EventType current, EventType next) {
                      next == EventType::kill || next == EventType::lost;
             break;
 
-/*      Disconsidered transitions      
 
         case EventType::evict:
             result = next == EventType::submit;
@@ -263,7 +228,6 @@ bool Event::validateStateChange(EventType current, EventType next) {
         case EventType::lost:
             result = next == EventType::submit;
             break;
-*/
 
         case EventType::update_pending:
             result = next == EventType::schedule || next == EventType::fail || 
@@ -283,23 +247,4 @@ bool Event::validateStateChange(EventType current, EventType next) {
     }
 
     return result;
-}
-
-
-int Event::reindex(EventType event) {
-    int final_events[] = { 2, 3, 4, 5, 6 };
-    int trans_events[] = { 1, 0 };
-    //int loop_events[] =  { 7, 8 };
-    int i = static_cast<int>(event);
-
-    bool result = std::find(std::begin(final_events), std::end(final_events), i) != std::end(final_events);
-    if( result )
-        return 2;
-
-    result = std::find(std::begin(trans_events), std::end(trans_events), i) != std::end(trans_events);
-    if( result )
-        return i;
-
-    // state correspond to State::update_pending or State::update_running
-    return i - 4;
 }

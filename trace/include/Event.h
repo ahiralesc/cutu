@@ -24,12 +24,6 @@ using boost::unordered_map;
 namespace Event {
 
 
-/*  Valid traces contain reach a start and completion event.
-    The Trace bitmap adds up to:
-*/
-//static std::set<int> valid_state = { 7, 15, 23, 31, 5, 13 };
-
-
 /**
 *   For schema documentation see:
 *   Reiss, C. Google cluster-usage traces: format + schema 2014
@@ -46,6 +40,9 @@ enum class EventType : unsigned int {
     update_running  // 8
 };
 
+/**
+* Task and job final event set
+*/
 static std::set<EventType> FinalEvents = { EventType::evict, EventType::fail, EventType::finish, EventType::kill, EventType::lost};
 
 
@@ -57,13 +54,12 @@ enum class ResourceEventType : unsigned int {
 
 
 class Event {
-    public :
-        unsigned long long timestamp;
-        
-        Event(unsigned long long);
-        Event();
-        unsigned long long timeStamp() const;
-        std::string virtual to_json() const = 0;
+public:
+    unsigned long long timestamp{};
+    Event(unsigned long long time_stamp):timestamp{time_stamp}{};
+    Event() = default;
+    unsigned long long timeStamp() const;
+    std::string virtual to_json() const = 0;
 };
 
 /*
@@ -111,31 +107,29 @@ class Event {
     12 - norm_req_disk, float, same as 10.
 
     13 - constraints, boolean, represents task placement constraints.
-                      
-
 */
 
 
 class TaskEvent : public Event {
   public :
     // 1 in super class Event
-    unsigned int        missing_info;       // 2
-    unsigned long long  job_id;             // 3
-    unsigned long long  task_index;         // 4
-    unsigned long long  machine_id;         // 5
-    EventType           event_type;         // 6
+    unsigned int        missing_info{};     // 2
+    unsigned long long  job_id{};           // 3
+    unsigned long long  task_index{};       // 4
+    unsigned long long  machine_id{};       // 5
+    EventType           event_type;         // 6, uninitialized
     std::string         user_name;          // 7
-    unsigned int        scheduling_class;   // 8
-    unsigned int        priority;           // 9
-    float               norm_req_cores;     // 10
-    float               norm_req_ram;       // 11
-    float               norm_req_disk;      // 12
+    unsigned int        scheduling_class{}; // 8
+    unsigned int        priority{};         // 9
+    float               norm_req_cores{};   // 10
+    float               norm_req_ram{};     // 11
+    float               norm_req_disk{};    // 12
     bool                constraints;        // 13
     std::string         job_type;           // Rigid
     std::string         id;                 // job_id + task_index
 
     TaskEvent(const std::string&);
-    TaskEvent();
+    TaskEvent() : Event() {};
     std::string to_json() const override;
 };
 
@@ -144,17 +138,18 @@ class TaskEvent : public Event {
 class JobEvent : public Event { 
     public :
     // 1 in super class Event
-    unsigned int        missing_info;
-    unsigned long long  job_id;
-    EventType           event_type;
+    unsigned int        missing_info{};
+    unsigned long long  job_id{};
+    EventType           event_type;         // uninitialized
     std::string         user_name;
-    unsigned int        scheduling_class;
+    unsigned int        scheduling_class{};
     std::string         job_name;
     std::string         logical_job_name;
-    unsigned int        priority;
+    unsigned int        priority{};
     std::string         job_type;            // Composite
 
     JobEvent(const std::string&);
+    JobEvent() : Event() {};
     std::string to_json() const override;
 };
 
@@ -164,31 +159,17 @@ class ResourceEvent : public Event {
     public :
     // 1 in super class Event
     std::string         resource_class;
-    unsigned long long  resource_id;
+    unsigned long long  resource_id{};
     ResourceEventType   event_type;
     std::string         platform_id;
-    unsigned long long  cpu_capacity;
-    unsigned long long  ram_capacity;
-    unsigned long long  disk_capacity;
+    unsigned long long  cpu_capacity{};
+    unsigned long long  ram_capacity{};
+    unsigned long long  disk_capacity{};
 
     ResourceEvent(const std::string&);
+    ResourceEvent() : Event() {};
     std::string to_json() const override;
 };
-
-
-/*
-
-class Event {
-        EventType etype;
-        long tstamp;
-
-    public:
-        Event();
-        Event(const string& str, const long instance);
-        Event(const EventType event, const long instance);
-        long timestamp() const;
-        EventType type() const;
-};*/
 
 
 /* Event helper function */
@@ -226,11 +207,7 @@ const unordered_map<EventType, std::string> st2str = map_list_of
 
 
 /* EventType helper function: validates state changes */
-bool validateStateChange(EventType current, EventType next);
-
-
-/* EventType helper function: reindex a given index*/
-int reindex(EventType event);
+bool validateEventChange(EventType current, EventType next);
 
 }
 

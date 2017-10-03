@@ -231,7 +231,7 @@ bool ETrace::Trace::isComplete() {
     if( search != FinalEvents.end() )
         return false;
     for(unsigned i=0; i<sz; i++)
-        if(!validateStateChange(event[i].event_type,event[i+1].event_type))
+        if(!validateEventChange(event[i].event_type,event[i+1].event_type))
             return false;
     return true;
 }
