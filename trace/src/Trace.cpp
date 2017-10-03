@@ -172,13 +172,8 @@ bool ETrace::Trace::merge(Trace &trace) {
 
 // Returns an empty object if not found
 TaskEvent& ETrace::Trace::last_event() {
-    Event::TaskEvent event;
-
-    if( !empty() ) {
-        std::vector<Event::TaskEvent> ev(events.begin(), events.end());
-        return ev[ev.size()];
-    } 
-    return event;
+    std::vector<Event::TaskEvent> ev(events.begin(), events.end());
+    return ev[ev.size()];
 };
 
 
@@ -207,7 +202,7 @@ bool ETrace::Trace::finished(){
 
 
 bool ETrace::Trace::completed(){
-    return (lastEvent() == EventType::finish);
+    return (last_event().event_type == EventType::finish);
 };
 
 
@@ -220,49 +215,56 @@ bool ETrace::Trace::lost() {
     return validateEvent(EventType::lost);
 };
 
-/*
+/**
 *   @brief  A trace is complete if it begins with a submmit event,
 *        reaches one of the following events {evicted, fail, finish, kill, or lost}
 *        and all its transitions are valid.   
 *  
 *   @return true is the trace is complete, false otherwise 
-
+*/
 bool ETrace::Trace::isComplete() {
     std::vector<Event::TaskEvent> event(events.begin(), events.end());
     unsigned sz = event.size();
-    if(event[0] != EventType::submit)
+    if(event[0].event_type != EventType::submit)
         return false;
-    auto search = FinalEvents.find(event[sz]);
+    auto search = FinalEvents.find(event[sz].event_type);
     if( search != FinalEvents.end() )
-        retunr false;
+        return false;
     for(unsigned i=0; i<sz; i++)
-        if(!validateTransition(event[i],event[i+1])
+        if(!validateStateChange(event[i].event_type,event[i+1].event_type))
             return false;
     return true;
 }
 
 
-
+/**
 *   @brief A trace is resubmutted if at least one of the following transitions exists
 *           evict to submit
 *           fail to submit
 *           finish to submit
 *           kill to submit
 *           lost to submit
-*   The method does not analyse the number ot times the job was resubmitted
-
+*   The method does not analyse the number ot times the job was resubmitted.
+*/
 bool ETrace::Trace::isResubmitted() {
-    std::vector<Event::TaskEvent> event(events.beging(),events.end());
-    unsigned sz = FinalEvents.size();
-    for(unsigned i=0; i<=sz; i++) {
-        auto search = event.find(FinalEvent[i]);
-        if( search!= event.end())
-            if(event[search+1] == EventType::submit)
-                return true; 
+    std::vector<Event::TaskEvent> event(events.begin(),events.end());
+    std::vector<unsigned> index;
+    unsigned sz = events.size();
+
+    // Find all task finalization events
+    for(unsigned i=0; i<sz; i++) {
+        auto search = FinalEvents.find(event[i].event_type);
+        if(search != FinalEvents.end())
+            index.push_back(i);
     }
+    
+    for(unsigned i : index)
+        if( i+1 < sz )
+            if(event[i+1].event_type == EventType::submit)
+                return true;
+    
     return false;
 }
-
 
 
 string ETrace::Trace::to_json() const 
@@ -295,6 +297,3 @@ string ETrace::Trace::to_json() const
 
     return json;
 }
-
-
-*/
