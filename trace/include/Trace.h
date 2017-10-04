@@ -57,7 +57,7 @@ public :
 */
 class Trace {
 private:
-    unsigned long long jid{};       // Job ID (the task container) 
+    unsigned long long jid{};         // Job ID (the task container) 
     std::string tid;                // Task id
     std::string user;               // Job owner
     std::string uuid;               // The trace UUID. Merging traces may replace the uuid
@@ -100,6 +100,9 @@ public:
 
     // Operation: gets the trace uuid
     std::string get_uuid() { return uuid; } 
+
+    // Operation: get trace user
+    std::string get_user() { return user; }
 
     // Operation: gets the trace start time
     unsigned long long get_start_time() { return startTime; }

@@ -126,7 +126,7 @@ ETrace::Trace::Trace(const string &json)
 
 
 bool ETrace::Trace::empty() {
-    return (events.size() <= 0)? true : false;
+    return (events.size() == 0)? true : false;
 };
 
 
@@ -136,7 +136,7 @@ unsigned int ETrace::Trace::size() {
 
 
 void ETrace::Trace::insert(const TaskEvent &event) {
-    if( empty() ) {
+    if( empty() && tid == "") {
         jid  = event.job_id;
         tid  = event.id;
         user = event.user_name;

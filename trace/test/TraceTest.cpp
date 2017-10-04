@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE( Trace_creation )
     TaskEvent ev = trace.last_event();
 
     bool eval = 
-        (trace.jid == 3689348814741910300) &&
-        (trace.tid == "3689348814741910300") &&
-        (trace.user == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3") &&
+        (trace.get_jid() == 3689348814741910300) &&
+        (trace.get_tid() == "3689348814741910300") &&
+        (trace.get_user() == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3") &&
         (ev.timestamp == 3689348814741910301) &&
         (ev.missing_info == 2) &&
         (ev.job_id == 3689348814741910300) &&
@@ -114,7 +114,6 @@ BOOST_AUTO_TEST_CASE( Trace_creation )
         (ev.norm_req_disk == 1.0f) &&
         (ev.constraints == true);
     
-    //cout << "Value : " << ev.norm_req_disk << std::endl;
     BOOST_CHECK_EQUAL(eval,true);
 }
 

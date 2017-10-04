@@ -27,6 +27,7 @@ using namespace ETrace;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(JBIOTest) 
+
 BOOST_AUTO_TEST_CASE( emptyness ) 
 {
     string json =  "{"
@@ -72,7 +73,6 @@ BOOST_AUTO_TEST_CASE( emptyness )
 
 
     Trace trace{json};
-
     BOOST_CHECK_EQUAL(trace.empty(),false);
 }
 
@@ -127,20 +127,22 @@ BOOST_AUTO_TEST_CASE( first_element_access )
     JSONTraceBuffIOS reader{in_file,5};
 
     Trace t2 = reader.next();
-
-    bool eval = (t2.uuid == t1.uuid) &&
-                (t2.jid == t1.jid);
+    
+    bool eval = (t2.get_tid() == t1.get_tid()) &&
+                (t2.get_jid() == t1.get_jid());
 
     BOOST_CHECK_EQUAL(eval,true);
-} 
+}
+
 
 BOOST_AUTO_TEST_CASE( last_element_access )
 {
      string json =  
         "{\"trace_id\":\"15\","
-        "\"job_id\":4121195473,"
+        "\"job_id\":15,"
         "\"user_name\":\"\","
         "\"uuid\":\"484f04e2-545a-40ff-84e3-a3a6b5eb791f\","
+        "\"timestamp\":502062044694,"
         "\"events\": ["
             "{\"timestamp\":504524563872,"
             "\"missing_info\":4294967295,"
@@ -196,7 +198,8 @@ BOOST_AUTO_TEST_CASE( last_element_access )
 
     do{
         t2 = reader.next();
-        eval = (t2.uuid == t1.uuid) && (t2.jid == t1.jid);
+        eval = (t2.get_tid() == t1.get_tid()) && 
+               (t2.get_jid() == t1.get_jid());
         if(eval)
             break;
     }while(!reader.empty());
