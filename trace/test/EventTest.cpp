@@ -23,91 +23,39 @@ using namespace Event;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(bitmap_test)
-/*
 
-BOOST_AUTO_TEST_CASE( Transitions_0_1_2 )
+
+BOOST_AUTO_TEST_CASE( valid_transitions )
 {
     bitset<5> states;
     states.reset();
-
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::evict));
-    BOOST_CHECK_EQUAL(states.to_ulong(),7);
-}
-
-
-BOOST_AUTO_TEST_CASE( Transitions_0_1_3 )
-{
-    bitset<5> states;
-    states.reset();
-
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::fail));
-    BOOST_CHECK_EQUAL(states.to_ulong(),7);
-}
-
-
-BOOST_AUTO_TEST_CASE( Transitions_0_1_4 )
-{
-    bitset<5> states;
-    states.reset();
-
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::finish));
-    BOOST_CHECK_EQUAL(states.to_ulong(),7);
-}
-
-
-BOOST_AUTO_TEST_CASE( Transitions_0_1_5 )
-{
-    bitset<5> states;
-    states.reset();
-
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::kill));
-    BOOST_CHECK_EQUAL(states.to_ulong(),7);
-}
-
-
-BOOST_AUTO_TEST_CASE( Transitions_0_1_6 )
-{
-    bitset<5> states;
-    states.reset();
+        
+    if(validateEventChange(EventType::submit, EventType::schedule)) 
+        states.set(0);
+    if(validateEventChange(EventType::schedule, EventType::finish)) 
+        states.set(1);
+    if(validateEventChange(EventType::evict, EventType::submit)) 
+        states.set(2);
+    if(validateEventChange(EventType::submit, EventType::update_pending)) 
+        states.set(3);
+    if(validateEventChange(EventType::update_running, EventType::lost)) 
+        states.set(4);
     
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::lost));
-    BOOST_CHECK_EQUAL(states.to_ulong(),7);
+    BOOST_CHECK_EQUAL(states.all(),true);
 }
 
 
-BOOST_AUTO_TEST_CASE( Transitions_0_7_1_2 )
+BOOST_AUTO_TEST_CASE( invalid_transition )
 {
-    bitset<5> states;
+    bitset<2> states;
     states.reset();
 
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::update_pending));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::evict));
-    BOOST_CHECK_EQUAL(states.to_ulong(),15);
+    if(!validateEventChange(EventType::submit, EventType::evict))
+        states.set(0);
+    if(!validateEventChange(EventType::lost, EventType::schedule))
+        states.set(1);
+    
+    BOOST_CHECK_EQUAL(states.all(), true);
 }
 
-
-BOOST_AUTO_TEST_CASE( Transitions_0_7_1_3 )
-{
-    bitset<5> states;
-    states.reset();
-
-    states.set(reindex(EventType::submit));
-    states.set(reindex(EventType::update_pending));
-    states.set(reindex(EventType::schedule));
-    states.set(reindex(EventType::fail));
-    BOOST_CHECK_EQUAL(states.to_ulong(),15);
-}
-*/
 BOOST_AUTO_TEST_SUITE_END()
