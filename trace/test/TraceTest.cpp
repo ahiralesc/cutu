@@ -29,86 +29,19 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(trace)
 
-BOOST_AUTO_TEST_CASE( Trace_creation ) 
+/**
+*   Test cases:
+*   1 - creation of an empty trace object
+*   2 - creation of a non-empty trace object
+*/
+BOOST_AUTO_TEST_CASE( constructor_tests )
 {
-    // Only events and the main trace properties are stored.
-
     string json =  "{"
     "\"trace_id\": \"3689348814741910300\","
     "\"job_id\": 3689348814741910300,"
     "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
-    "\"events\": ["
-        "{"
-        "\"timestamp\": 3689348814741910301,"
-        "\"missing_info\": 2,"
-        "\"job_id\": 3689348814741910300,"
-        "\"task_index\": 3689348814741910300,"
-        "\"machine_id\": 3689348814741910300,"
-        "\"event_type\": 0,"
-        "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
-        "\"scheduling_class\": 3,"
-        "\"priority\": 255,"
-        "\"norm_req_cores\": 0.01,"
-        "\"norm_req_ram\": 0.99,"
-        "\"norm_req_disk\": 1.0,"
-        "\"constraints\": true"
-        "}"
-    "],"
-    "\"avg_alloc_resources\": {"
-    "\"avg_norm_alloc_cores\": 9.87654321,"
-    "\"avg_norm_alloc_ram\": 9.87654321,"
-    "\"avg_norm_alloc_disk\": 9.87654321"
-    "},"
-    "\"factors\": {"
-        "\"class\": \"abc123\","
-        "\"released_time\": 3689348814741910300,"
-        "\"waiting_time\": 3689348814741910300,"
-        "\"start_deadline\": 3689348814741910300,"
-        "\"completion_deadline\": 3689348814741910300,"
-        "\"system_time\": 3689348814741910300,"
-        "\"req_time\": 3689348814741910300,"
-        "\"req_cores\": 8589934591,"
-        "\"req_ram\": 8589934591,"
-        "\"req_disk\": 3689348814741910300"
-    "}"
-    "}";
-
-    Trace trace{json};
-
-    TaskEvent ev = trace.last_event();
-
-    bool eval = 
-        (trace.get_jid() == 3689348814741910300) &&
-        (trace.get_tid() == "3689348814741910300") &&
-        (trace.get_user() == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3") &&
-        (ev.timestamp == 3689348814741910301) &&
-        (ev.missing_info == 2) &&
-        (ev.job_id == 3689348814741910300) &&
-        (ev.task_index == 3689348814741910300) &&
-        (ev.machine_id == 3689348814741910300) &&
-        (ev.event_type == EventType::submit) && 
-        (ev.user_name == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3") &&
-        (ev.scheduling_class == 3)  &&
-        (ev.priority == 255) && 
-        (ev.norm_req_cores == 0.01f)&& 
-        (ev.norm_req_ram == 0.99f) && 
-        (ev.norm_req_disk == 1.0f) &&
-        (ev.constraints == true);
-    
-    BOOST_CHECK_EQUAL(eval,true);
-}
-
-
-BOOST_AUTO_TEST_CASE( emptynes_test )
-{
-    // Only events and the main trace properties are stored.
-
-    string json =  "{"
-    "\"trace_id\": \"3689348814741910300\","
-    "\"job_id\": 3689348814741910300,"
-    "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
-    "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
+    "\"timestamp\": 3689348814741910301,"
     "\"events\": ["
         "{"
         "\"timestamp\": 3689348814741910301,"
@@ -147,10 +80,13 @@ BOOST_AUTO_TEST_CASE( emptynes_test )
 
     bitset<2> states;
     states.reset();
-
+    
+    // Test 1
     Trace t1{};
     if(t1.empty() == true)
         states.set(0); 
+    
+    // Test 2
     Trace t2{json};
     if(t2.empty() == false)
         states.set(1);
@@ -159,42 +95,61 @@ BOOST_AUTO_TEST_CASE( emptynes_test )
 }
 
 
-
-
-
-BOOST_AUTO_TEST_CASE( Trace_creation_two_events )
+/** 
+*   Test cases (using an incomplete trace):
+*   1. last_evet, evaluates event equality. Expected last event timestamp: 20
+*   2. get_jid, evaluates job id equality. Expected: 10
+*   3. get_tid, evaluates tid equality. Expected: 1
+*   4. get_uuid, evaluates uuid equality. Expected: 5c319860-5f51-4093-aacb-778cfcab65cc
+*   5. get_user, evaluates user name equality. Expected: A
+*   6. get_start_time, evaluates trace start time. Expected: 10
+*   7. evicted, evaluates if the trace was evicted. Expected: false
+*   8. _failed, evaluates if the trace failed. Expected: false
+*   9. finished, evaluates if the trace finished. Expected: false
+*   10. completed, evaluates if the trace completed. Expected: false
+*   11. killed, evaluates if the trace was killed. Expected: false
+*   12. lost, evaluates if the trace was lost. Expected: false
+*   13. isComplete, evaluates if the trace is complete. Expected: false 
+*   14. isResbmitted, evaluates is the trace was resubmitted. Expected: false
+*
+*   Test are re-evaluated under the following assumtions:
+*   - The trace is complete (a complete trace is used)
+*   - The traces was resubmitted
+*   - The trace failed
+*   Thus, tests 8, 9, 10, 13, 14 are true
+*/
+BOOST_AUTO_TEST_CASE( operation_tests )
 {
-    // Only events and the main trace properties are stored.
-
-    string json =  "{"
-    "\"trace_id\": \"3689348814741910300\","
-    "\"job_id\": 3689348814741910300,"
-    "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+    string incomplete_trace =  "{"
+    "\"trace_id\": \"1\","
+    "\"job_id\": 10,"
+    "\"user_name\": \"A\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
+    "\"timestamp\":10,"
     "\"events\": ["
         "{"
-        "\"timestamp\": 3689348814741910301,"
+        "\"timestamp\": 20,"
         "\"missing_info\": 2,"
-        "\"job_id\": 3689348814741910300,"
-        "\"task_index\": 3689348814741910300,"
-        "\"machine_id\": 3689348814741910300,"
-        "\"event_type\": 0,"
-        "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+        "\"job_id\": 10,"
+        "\"task_index\": 20,"
+        "\"machine_id\": 20,"
+        "\"event_type\": 1,"
+        "\"user_name\": \"A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.01,"
-        "\"norm_req_ram\": 0.99,"
-        "\"norm_req_disk\": 1.0,"
+        "\"norm_req_cores\": 0.2,"
+        "\"norm_req_ram\": 0.2,"
+        "\"norm_req_disk\": 0.2,"
         "\"constraints\": true"
         "},"
         "{"
-        "\"timestamp\": 123,"
+        "\"timestamp\": 10,"
         "\"missing_info\": 1,"
-        "\"job_id\": 123,"
-        "\"task_index\": 123,"
-        "\"machine_id\": 123,"
+        "\"job_id\": 10,"
+        "\"task_index\": 10,"
+        "\"machine_id\": 10,"
         "\"event_type\": 0,"
-        "\"user_name\": \"AAA\","
+        "\"user_name\": \"A\","
         "\"scheduling_class\": 1,"
         "\"priority\": 255,"
         "\"norm_req_cores\": 0.01,"
@@ -222,28 +177,216 @@ BOOST_AUTO_TEST_CASE( Trace_creation_two_events )
     "}"
     "}";
 
-    Trace trace{json};
 
+string complete_trace =  "{"
+    "\"trace_id\": \"1\","
+    "\"job_id\": 11,"
+    "\"user_name\": \"A\","
+    "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
+    "\"timestamp\":10,"
+    "\"events\": ["
+        "{"
+        "\"timestamp\": 10,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 11,"
+        "\"task_index\": 1,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.2,"
+        "\"norm_req_ram\": 0.2,"
+        "\"norm_req_disk\": 0.2,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 20,"
+        "\"missing_info\": 1,"
+        "\"job_id\": 11,"
+        "\"task_index\": 2,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 1,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 1,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.01,"
+        "\"norm_req_disk\": 0.01,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 30,"
+        "\"missing_info\": 1,"
+        "\"job_id\": 11,"
+        "\"task_index\": 3,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 3,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 1,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.01,"
+        "\"norm_req_disk\": 0.01,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 40,"
+        "\"missing_info\": 1,"
+        "\"job_id\": 11,"
+        "\"task_index\": 4,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 1,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.01,"
+        "\"norm_req_disk\": 0.01,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 50,"
+        "\"missing_info\": 1,"
+        "\"job_id\": 11,"
+        "\"task_index\": 5,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 1,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 1,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.01,"
+        "\"norm_req_disk\": 0.01,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 60,"
+        "\"missing_info\": 1,"
+        "\"job_id\": 11,"
+        "\"task_index\": 2,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 4,"
+        "\"user_name\": \"A\","
+        "\"scheduling_class\": 1,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.01,"
+        "\"norm_req_disk\": 0.01,"
+        "\"constraints\": true"
+        "}"
+    "],"
+    "\"avg_alloc_resources\": {"
+    "\"avg_norm_alloc_cores\": 9.87654321,"
+    "\"avg_norm_alloc_ram\": 9.87654321,"
+    "\"avg_norm_alloc_disk\": 9.87654321"
+    "},"
+    "\"factors\": {"
+        "\"class\": \"abc123\","
+        "\"released_time\": 3689348814741910300,"
+        "\"waiting_time\": 3689348814741910300,"
+        "\"start_deadline\": 3689348814741910300,"
+        "\"completion_deadline\": 3689348814741910300,"
+        "\"system_time\": 3689348814741910300,"
+        "\"req_time\": 3689348814741910300,"
+        "\"req_cores\": 8589934591,"
+        "\"req_ram\": 8589934591,"
+        "\"req_disk\": 3689348814741910300"
+    "}"
+    "}";
+
+    bitset<19> states;
+    states.reset();
+
+    // Test 1
+    Trace trace{incomplete_trace};
     TaskEvent ev = trace.last_event();
-
-
     bool eval =
-        (ev.timestamp == 123) &&
-        (ev.missing_info == 1) &&
-        (ev.job_id == 123) &&
-        (ev.task_index == 123) &&
-        (ev.machine_id == 123) &&
-        (ev.event_type == EventType::submit) &&
-        (ev.user_name == "AAA") &&
-        (ev.scheduling_class == 1)  &&
+        (ev.timestamp == 20 ) &&
+        (ev.missing_info == 2) &&
+        (ev.job_id == 10) &&
+        (ev.task_index == 20) &&
+        (ev.machine_id == 20) &&
+        (ev.event_type == EventType::schedule) &&
+        (ev.user_name == "A") &&
+        (ev.scheduling_class == 3)  &&
         (ev.priority == 255) &&
-        (ev.norm_req_cores == 0.01f)&&
-        (ev.norm_req_ram == 0.01f) &&
-        (ev.norm_req_disk == 0.01f) &&
+        (ev.norm_req_cores == 0.2f)&&
+        (ev.norm_req_ram == 0.2f) &&
+        (ev.norm_req_disk == 0.2f) &&
         (ev.constraints == true);
+    if(eval)
+        states.set(0);
 
-    //cout << "Value : " << ev.constraints << std::endl;
-    BOOST_CHECK_EQUAL(eval,true);
-}
+    // Test 2
+    if(trace.get_jid() == 10)
+        states.set(1);
+
+    // Test 3
+    if(trace.get_tid() == "1")
+        states.set(2);
+
+    // Test 4 
+    if(trace.get_uuid() == "5c319860-5f51-4093-aacb-778cfcab65cc")
+        states.set(3);
+
+    // Test 5
+    if(trace.get_user() == "A")
+        states.set(4);
+    
+    // Test 6
+    if(trace.time_stamp() == 10)
+        states.set(5);
+
+    // Test 7
+    if(trace.evicted() == false)
+        states.set(6);
+
+    // Test 8
+    if(trace._failed() == false)
+        states.set(7);
+
+    // Test 9
+    if(trace.finished() == false)
+        states.set(8);
+
+    // Test 10
+    if(trace.completed() == false)
+        states.set(9);
+
+    // Test 11
+    if(trace.killed() == false)
+        states.set(10);
+
+    // Test 12
+    if(trace.lost() == false)
+        states.set(11);
+
+    // Test 13
+    if(trace.isComplete() == false)
+        states.set(12);
+
+    // Test 14
+    if(trace.isResubmitted() == false)
+        states.set(13);
+
+    // Tests  8, 9, 10, 13, 14 are reevaluated using a trace that failes, was resubmitted and completed
+    Trace ctrace{complete_trace};
+    if(ctrace._failed() == true)
+        states.set(14);
+    if(ctrace.finished() == true)
+        states.set(15);
+    if(ctrace.completed() == true)
+        states.set(16);
+    if(ctrace.isComplete() == true)
+        states.set(17);
+    if(ctrace.isResubmitted() == true)
+        states.set(18);
+
+
+    std::cout << std::endl << states << std::endl;
+
+    BOOST_CHECK_EQUAL(states.all(),true);
+} 
 
 BOOST_AUTO_TEST_SUITE_END()

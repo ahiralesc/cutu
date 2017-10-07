@@ -57,8 +57,8 @@ public :
 */
 class Trace {
 private:
-    unsigned long long jid{};         // Job ID (the task container) 
-    std::string tid;                // Task id
+    unsigned long long jid{};       // Job ID (the task container) 
+    std::string tid;                // Trace id
     std::string user;               // Job owner
     std::string uuid;               // The trace UUID. Merging traces may replace the uuid
     unsigned long long startTime;   // Timestamp of the first trace event
@@ -95,7 +95,7 @@ public:
     // Operation: gets the trace job id
      unsigned long long get_jid() { return jid; }
 
-    // Operation: gets the task id
+    // Operation: gets the trace id
     std::string get_tid() { return tid; }
 
     // Operation: gets the trace uuid
@@ -105,7 +105,7 @@ public:
     std::string get_user() { return user; }
 
     // Operation: gets the trace start time
-    unsigned long long get_start_time() { return startTime; }
+    unsigned long long time_stamp() { return startTime; }
 
     // Operation: returns true if the trace was evicted, otherwise false
     bool evicted();
@@ -136,9 +136,6 @@ public:
     // Operation: transforms the object to a JSON formatted string
     std::string to_json() const;
 
-    unsigned long long time_stamp() {
-        return startTime;
-    }
 };
 
     

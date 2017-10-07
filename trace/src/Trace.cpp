@@ -173,7 +173,7 @@ bool ETrace::Trace::merge(Trace &trace) {
 // Returns an empty object if not found
 TaskEvent& ETrace::Trace::last_event() {
     std::vector<Event::TaskEvent> ev(events.begin(), events.end());
-    return ev[ev.size()];
+    return ev[ev.size()-1];
 };
 
 
