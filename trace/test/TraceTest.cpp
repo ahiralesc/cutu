@@ -76,24 +76,6 @@ BOOST_AUTO_TEST_CASE( Trace_creation )
 
     Trace trace{json};
 
-    /*cout << trace.tid << std::endl;
-    cout << trace.jid << std::endl;
-    cout << trace.user << std::endl;
-    TaskEvent ev = trace.last_event();
-    cout << ev.timestamp << std::endl;
-    cout << ev.missing_info << std::endl;
-    cout << ev.job_id << std::endl;
-    cout << ev.task_index << std::endl;
-    cout << ev.machine_id << std::endl;
-    //cout << ev.event_type << std::endl;
-    cout << ev.user_name << std::endl;
-    cout << ev.scheduling_class << std::endl;
-    cout << ev.priority << std::endl; 
-    cout << ev.norm_req_cores << std::endl;
-    cout << ev.norm_req_ram << std::endl;
-    cout << ev.norm_req_disk << std::endl;
-    cout << ev.constraints << std::endl; */
-
     TaskEvent ev = trace.last_event();
 
     bool eval = 
@@ -116,6 +98,68 @@ BOOST_AUTO_TEST_CASE( Trace_creation )
     
     BOOST_CHECK_EQUAL(eval,true);
 }
+
+
+BOOST_AUTO_TEST_CASE( emptynes_test )
+{
+    // Only events and the main trace properties are stored.
+
+    string json =  "{"
+    "\"trace_id\": \"3689348814741910300\","
+    "\"job_id\": 3689348814741910300,"
+    "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+    "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
+    "\"events\": ["
+        "{"
+        "\"timestamp\": 3689348814741910301,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 3689348814741910300,"
+        "\"task_index\": 3689348814741910300,"
+        "\"machine_id\": 3689348814741910300,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.99,"
+        "\"norm_req_disk\": 1.0,"
+        "\"constraints\": true"
+        "}"
+    "],"
+    "\"avg_alloc_resources\": {"
+    "\"avg_norm_alloc_cores\": 9.87654321,"
+    "\"avg_norm_alloc_ram\": 9.87654321,"
+    "\"avg_norm_alloc_disk\": 9.87654321"
+    "},"
+    "\"factors\": {"
+        "\"class\": \"abc123\","
+        "\"released_time\": 3689348814741910300,"
+        "\"waiting_time\": 3689348814741910300,"
+        "\"start_deadline\": 3689348814741910300,"
+        "\"completion_deadline\": 3689348814741910300,"
+        "\"system_time\": 3689348814741910300,"
+        "\"req_time\": 3689348814741910300,"
+        "\"req_cores\": 8589934591,"
+        "\"req_ram\": 8589934591,"
+        "\"req_disk\": 3689348814741910300"
+    "}"
+    "}";
+
+    bitset<2> states;
+    states.reset();
+
+    Trace t1{};
+    if(t1.empty() == true)
+        states.set(0); 
+    Trace t2{json};
+    if(t2.empty() == false)
+        states.set(1);
+
+    BOOST_CHECK_EQUAL(states.all(),true);
+}
+
+
+
 
 
 BOOST_AUTO_TEST_CASE( Trace_creation_two_events )
