@@ -31,10 +31,12 @@ BOOST_AUTO_TEST_SUITE(trace)
 
 /**
 *   Test cases:
-*   1 - creation of an empty trace object
-*   2 - creation of a non-empty trace object
+*   1. Trace, evaluate default object initialization
+*   2. Trace(stirng), evaluate object initialization
+*   3. empty, evaluate the container is/not empty 
+*   4. size, evaluate the number of stored events. Expected: 1
 */
-BOOST_AUTO_TEST_CASE( constructor_tests )
+BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 {
     string json =  "{"
     "\"trace_id\": \"3689348814741910300\","
@@ -78,9 +80,9 @@ BOOST_AUTO_TEST_CASE( constructor_tests )
     "}"
     "}";
 
-    bitset<2> states;
+    bitset<4> states;
     states.reset();
-    
+
     // Test 1
     Trace t1{};
     if(t1.empty() == true)
@@ -88,11 +90,87 @@ BOOST_AUTO_TEST_CASE( constructor_tests )
     
     // Test 2
     Trace t2{json};
-    if(t2.empty() == false)
+    bool eval = (t2.get_tid() == "3689348814741910300") &&
+                (t2.get_jid() == 3689348814741910300) &&
+                (t2.get_uuid() == "5c319860-5f51-4093-aacb-778cfcab65cc") &&
+                (t2.get_user() == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3"); 
+    if(eval)
         states.set(1);
+
+    // Test 3
+    if(!t2.empty() && t1.empty())
+        states.set(2);
+
+    // Test 4
+    if(t2.size() == 1)
+        states.set(3);
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }
+
+
+/**
+*   Test cases:
+*   1. Trace, evaluate default object initialization
+*   2. Trace(stirng), evaluate object initialization
+*   3. empty, evaluate the container is/not empty
+*   4. size, evaluate the number of stored events. Expected: 1
+*/
+BOOST_AUTO_TEST_CASE( capacity_tests )
+{    
+{     
+    string t1 =  "{"
+    "\"trace_id\": \"1\","
+    "\"job_id\": 1,"
+    "\"user_name\": \"3A\","
+    "\"uuid\":\"5c\","
+    "\"timestamp\": 1,"
+    "\"events\": ["
+        "{"
+        "\"timestamp\": 3689348814741910301,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 3689348814741910300,"
+        "\"task_index\": 3689348814741910300,"
+        "\"machine_id\": 3689348814741910300,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.01,"
+        "\"norm_req_ram\": 0.99,"
+        "\"norm_req_disk\": 1.0,"
+        "\"constraints\": true"
+        "}"
+    "],"
+    "\"avg_alloc_resources\": {"
+    "\"avg_norm_alloc_cores\": 9.87654321,"
+    "\"avg_norm_alloc_ram\": 9.87654321,"
+    "\"avg_norm_alloc_disk\": 9.87654321"
+    "},"
+    "\"factors\": {"
+        "\"class\": \"abc123\","
+        "\"released_time\": 3689348814741910300,"
+        "\"waiting_time\": 3689348814741910300,"
+        "\"start_deadline\": 3689348814741910300,"
+        "\"completion_deadline\": 3689348814741910300,"
+        "\"system_time\": 3689348814741910300,"
+        "\"req_time\": 3689348814741910300,"
+        "\"req_cores\": 8589934591,"
+        "\"req_ram\": 8589934591,"
+        "\"req_disk\": 3689348814741910300"
+    "}"
+    "}";
+
+
+    std::bitset<4> states;
+    states.reset();
+
+    BOOST_CHECK_EQUAL(states.all(),true);
+}
+
+
+
+
 
 
 /** 
@@ -383,9 +461,7 @@ string complete_trace =  "{"
     if(ctrace.isResubmitted() == true)
         states.set(18);
 
-
-    std::cout << std::endl << states << std::endl;
-
+    //std::cout << std::endl << states << std::endl;
     BOOST_CHECK_EQUAL(states.all(),true);
 } 
 
