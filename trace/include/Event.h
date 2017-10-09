@@ -126,7 +126,7 @@ class TaskEvent : public Event {
     float               norm_req_disk{};    // 12
     bool                constraints;        // 13
     std::string         job_type;           // Rigid
-    std::string         id;                 // job_id + task_index
+    std::string         id;                 // job_id + task_index (MAY DEPRECATE)
 
     TaskEvent(const std::string&);
     TaskEvent() : Event() {};

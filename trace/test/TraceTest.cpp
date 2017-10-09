@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 *   3. empty, evaluate the container is/not empty
 *   4. size, evaluate the number of stored events. Expected: 1
 */
-BOOST_AUTO_TEST_CASE( capacity_tests )
+BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
 {     
     string t1 =  "{"
@@ -160,6 +160,8 @@ BOOST_AUTO_TEST_CASE( capacity_tests )
         "\"req_disk\": 3689348814741910300"
     "}"
     "}";
+
+    string e1 = 
 
 
     std::bitset<4> states;

@@ -136,14 +136,26 @@ unsigned int ETrace::Trace::size() {
 
 
 void ETrace::Trace::insert(const TaskEvent &event) {
-    if( empty() && tid == "") {
-        jid  = event.job_id;
-        tid  = event.id;
-        user = event.user_name;
-        // startTime is set when the trace is sent to persistence
+    if( empty() ){
         boost::uuids::uuid uid = uuids::random_generator()();
         uuid = boost::uuids::to_string(uid);
     }
+
+    if( event.event_type == TaskEvent::submit ) {
+        if(!empty()) {
+            std::vector<Event::TaskEvent> ev(events.begin(), events.end());
+            if( ev[0].event_type == TaskEvent::submit && event.timestamp < ev[0].timestamp)
+                timestamp = event.timestamp; 
+        } else
+            timestamp = event.timestamp;
+    }
+
+    if(jid == "") {
+        jid  = event.job_id;
+        tid  = event.id; //MAY DEPRECATE
+        user = event.user_name;
+    }
+
     events.insert(event);
     resources.add(event);
 };
@@ -269,18 +281,9 @@ bool ETrace::Trace::isResubmitted() {
 
 string ETrace::Trace::to_json() const 
 {
-    unsigned long long minStartTime = ULLONG_MAX;
-    string user_name;
-  
     string ev;
-    for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++) {
-        unsigned long long ts = it->timeStamp();
-        if( ts < minStartTime ) {
-            minStartTime = ts;
-            user_name = it->user_name;
-        }
+    for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++)
         ev += it->to_json() + ",";
-    }
     ev.pop_back(); 
     
     string json =
@@ -289,7 +292,7 @@ string ETrace::Trace::to_json() const
     "\"job_id\":" +     std::to_string(jid) + ","
     "\"user_name\":\"" +  user + "\","
     "\"uuid\":\"" + uuid + "\","
-    "\"timestamp\":" + std::to_string(minStartTime) + ","
+    "\"timestamp\":" + std::to_string(startTime) + ","
     "\"events\": [" +   ev +
     "]," +
     resources.to_json() +
