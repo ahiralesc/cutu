@@ -12,13 +12,17 @@ limitations under the License.
 ============================================================================= */
 
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 #include <string>
 #include <cstdlib>
 #include "Event.h"
-#include <iostream>
+#include "rapidjson/schema.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/stringbuffer.h"
 
 using namespace boost;
 using namespace std;
+using namespace rapidjson;
 
 
 
@@ -28,7 +32,9 @@ unsigned long long Event::Event::timeStamp() const{
 
 
 
-Event::TaskEvent::TaskEvent(const std::string& line) : Event() {
+Event::TaskEvent::TaskEvent(const std::string& line, const std::string type) : Event() {
+if( type == "cvs" ) {
+
     std::vector<std::string> values;
 
     /*
@@ -65,6 +71,28 @@ Event::TaskEvent::TaskEvent(const std::string& line) : Event() {
     constraints     = (values[12].empty())? false : values[12]=="1";
     job_type        = string{"Rigid"};
     id              = string{ values[2] + values[3] };
+} 
+
+if( type == "json" ) {
+    Document d; 
+    d.Parse(line.c_str());
+
+    timestamp       = d["timestamp"].GetUint64();
+    missing_info    = d["missing_info"].GetUint();
+    job_id          = d["job_id"].GetUint64();
+    task_index      = d["task_index"].GetUint64();
+    machine_id      = d["machine_id"].GetUint64();
+    event_type      = static_cast<EventType>(d["event_type"].GetUint());
+    user_name       = d["user_name"].GetString();
+    scheduling_class= d["scheduling_class"].GetUint();
+    priority        = d["priority"].GetUint();
+    norm_req_cores  = d["norm_req_cores"].GetDouble();
+    norm_req_ram    = d["norm_req_ram"].GetDouble();
+    norm_req_disk   = d["norm_req_disk"].GetDouble();
+    constraints     = d["constraints"].GetBool();
+    job_type        = string{"Rigid"};
+    id              = string{ std::to_string(job_id) + std::to_string(task_index) };
+}
 
 };
 

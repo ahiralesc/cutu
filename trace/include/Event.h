@@ -128,7 +128,7 @@ class TaskEvent : public Event {
     std::string         job_type;           // Rigid
     std::string         id;                 // job_id + task_index (MAY DEPRECATE)
 
-    TaskEvent(const std::string&);
+    TaskEvent(const std::string&, const std::string type = "cvs");
     TaskEvent() : Event() {};
     std::string to_json() const override;
 };

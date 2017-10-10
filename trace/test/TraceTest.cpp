@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_SUITE(trace)
 *   3. empty, evaluate the container is/not empty 
 *   4. size, evaluate the number of stored events. Expected: 1
 */
+/*
 BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 {
     string json =  "{"
@@ -107,38 +108,67 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }
-
+*/
 
 /**
 *   Test cases:
-*   1. Trace, evaluate default object initialization
+*   1. insert, 
+*       We assume events belong to the same trace. However, they are inserted in two separate traces: trace1 and 
+*       trace2. Traces are disjoint sets. 
+*       Events will be inserted out of order in terms of event timestamp and event sequence.
+*       Expected outcome: non-empty traces, trace timestamp equal to the minimum event timestamp,
+*                         events ordered by timestamp.
+*
+*
+*    2. merge,
+*
+Both, we the same trace id but with different events. 
+        Events in each trace must be ordered by timestamp.
+
+evaluate insertion of out of order events in an empty and on-empty trace. 
+                
+*               Expected: events ordered by timestamp
 *   2. Trace(stirng), evaluate object initialization
 *   3. empty, evaluate the container is/not empty
 *   4. size, evaluate the number of stored events. Expected: 1
 */
 BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
-{     
-    string t1 =  "{"
+    string trace1 =  "{"
     "\"trace_id\": \"1\","
     "\"job_id\": 1,"
     "\"user_name\": \"3A\","
     "\"uuid\":\"5c\","
-    "\"timestamp\": 1,"
+    "\"timestamp\": 10,"
     "\"events\": ["
         "{"
-        "\"timestamp\": 3689348814741910301,"
+        "\"timestamp\": 10,"
         "\"missing_info\": 2,"
-        "\"job_id\": 3689348814741910300,"
-        "\"task_index\": 3689348814741910300,"
-        "\"machine_id\": 3689348814741910300,"
-        "\"event_type\": 0,"
-        "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
+        "\"job_id\": 1,"
+        "\"task_index\": 2,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 7,"
+        "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.01,"
-        "\"norm_req_ram\": 0.99,"
-        "\"norm_req_disk\": 1.0,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "},"
+        "{"
+        "\"timestamp\": 15,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 4,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 5,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
         "\"constraints\": true"
         "}"
     "],"
@@ -161,13 +191,104 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
     "}"
     "}";
 
-    /* 
-    TODO: Validate trace merging and insertion
-    */
+    string e1 = "{"
+        "\"timestamp\": 5,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 1,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "}";
+
+    string e2 = "{"
+        "\"timestamp\": 20,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 5,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 0,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "}";
+
+    string e3 = "{"
+        "\"timestamp\": 25,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 6,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 1,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "}";
+
+    string e4 = "{"
+        "\"timestamp\": 12,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 3,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 1,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "}";
 
 
-    std::bitset<4> states;
+    string e5 = "{"
+        "\"timestamp\": 30,"
+        "\"missing_info\": 2,"
+        "\"job_id\": 1,"
+        "\"task_index\": 7,"
+        "\"machine_id\": 1,"
+        "\"event_type\": 4,"
+        "\"user_name\": \"3A\","
+        "\"scheduling_class\": 3,"
+        "\"priority\": 255,"
+        "\"norm_req_cores\": 0.1,"
+        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_disk\": 0.1,"
+        "\"constraints\": true"
+        "}";
+
+
+    std::bitset<2> states;
     states.reset();
+    
+    // Test 1
+    Trace t1{trace1};
+    t1.insert(TaskEvent{e1,"json"});
+    t1.insert(TaskEvent{e2,"json"});
+    if(t1.time_stamp() == 5)
+        states.set(0);
+    
+    Trace t2{};
+    t2.insert(TaskEvent{e5,"json"});
+    t2.insert(TaskEvent{e4,"json"});
+    t2.insert(TaskEvent{e3,"json"});
+    if(t2.time_stamp() == 12)
+        states.set(1);
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }
@@ -199,7 +320,7 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
 *   - The traces was resubmitted
 *   - The trace failed
 *   Thus, tests 8, 9, 10, 13, 14 are true
-*/
+*//*
 BOOST_AUTO_TEST_CASE( operation_tests )
 {
     string incomplete_trace =  "{"
@@ -467,6 +588,6 @@ string complete_trace =  "{"
 
     //std::cout << std::endl << states << std::endl;
     BOOST_CHECK_EQUAL(states.all(),true);
-} 
+} */
 
 BOOST_AUTO_TEST_SUITE_END()
