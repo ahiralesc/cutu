@@ -167,13 +167,18 @@ void ETrace::Trace::clear() {
 
 
 // The UUID of the parameter trace is lost
-bool ETrace::Trace::merge(Trace &trace) {
-    if( jid != trace.get_jid() ) 
-        return false;
-    
+Trace& ETrace::Trace::operator+=(Trace &trace) {
+    if( jid != trace.get_jid() )
+        return *this; //No merging is done
+
     events.insert(trace.events.begin(),trace.events.end());
-    // Startime is set when the trace is sent to persistance
-    return true;
+    
+    std::vector<Event::TaskEvent> ev(events.begin(), events.end());
+    startTime = ev[0].timestamp;
+
+    // Falta sumar los resursos asignados
+    
+    return *this;
 };
 
 // Returns an empty object if not found

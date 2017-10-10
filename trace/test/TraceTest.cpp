@@ -121,16 +121,8 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 *
 *
 *    2. merge,
-*
-Both, we the same trace id but with different events. 
-        Events in each trace must be ordered by timestamp.
-
-evaluate insertion of out of order events in an empty and on-empty trace. 
-                
-*               Expected: events ordered by timestamp
-*   2. Trace(stirng), evaluate object initialization
-*   3. empty, evaluate the container is/not empty
-*   4. size, evaluate the number of stored events. Expected: 1
+*       Trace 1 and 2 are merged. No enforcement is made to verify events are disjoint prior merging.
+*       
 */
 BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
@@ -273,7 +265,7 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "}";
 
 
-    std::bitset<2> states;
+    std::bitset<3> states;
     states.reset();
     
     // Test 1
@@ -289,6 +281,13 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
     t2.insert(TaskEvent{e3,"json"});
     if(t2.time_stamp() == 12)
         states.set(1);
+
+    // Test 2
+    t1 += t2;
+    if(t1.time_stamp() == 5 && t1.size() == 7)
+        states.set(2);
+
+    std::cout << std::endl << t1.to_json() << std::endl;
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }

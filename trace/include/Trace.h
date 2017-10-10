@@ -86,8 +86,8 @@ public:
     // Modifier: erase 
     void clear();
 
-    // Modifier: merge events of this trace with that of another
-    bool merge(Trace&);
+    // Modifier: merge events of this trace with those of another
+    Trace& operator+=(Trace&);
 
     // Operation: gets the last inserted event
     Event::TaskEvent& last_event();
