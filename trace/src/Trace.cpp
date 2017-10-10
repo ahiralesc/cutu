@@ -141,16 +141,16 @@ void ETrace::Trace::insert(const TaskEvent &event) {
         uuid = boost::uuids::to_string(uid);
     }
 
-    if( event.event_type == TaskEvent::submit ) {
+    if( event.event_type == EventType::submit ) {
         if(!empty()) {
             std::vector<Event::TaskEvent> ev(events.begin(), events.end());
-            if( ev[0].event_type == TaskEvent::submit && event.timestamp < ev[0].timestamp)
-                timestamp = event.timestamp; 
+            if( ev[0].event_type == EventType::submit && event.timestamp < ev[0].timestamp)
+                startTime = event.timestamp; 
         } else
-            timestamp = event.timestamp;
+            startTime = event.timestamp;
     }
 
-    if(jid == "") {
+    if(jid == 0) {
         jid  = event.job_id;
         tid  = event.id; //MAY DEPRECATE
         user = event.user_name;

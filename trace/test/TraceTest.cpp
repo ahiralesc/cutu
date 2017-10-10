@@ -161,7 +161,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
     "}"
     "}";
 
-    string e1 = 
+    /* 
+    TODO: Validate trace merging and insertion
+    */
 
 
     std::bitset<4> states;
