@@ -48,6 +48,7 @@ public :
     
     //AvgAllocResources() = default;
     void add(const Event::TaskEvent&);
+    AvgAllocResources& operator+=(AvgAllocResources&);
     void clear();
     std::string to_json() const;
 };

@@ -51,6 +51,16 @@ void ETrace::AvgAllocResources::add(const TaskEvent &ev )
     }
 };
 
+ETrace::AvgAllocResources& ETrace::AvgAllocResources::operator+=(ETrace::AvgAllocResources& res){
+    num_req_cores += res.num_req_cores;
+    sum_norm_req_cores += res.sum_norm_req_cores;
+    num_req_ram += res.num_req_ram;
+    sum_norm_req_ram += sum_norm_req_ram;
+    num_req_disk += res.num_req_disk;
+    sum_norm_req_disk += res.sum_norm_req_disk;
+    // Averaging is done when the trace is sent to persistence
+};
+
 void ETrace::AvgAllocResources::clear() {
     num_req_cores = 0;
     num_req_ram = 0;
@@ -136,7 +146,7 @@ unsigned int ETrace::Trace::size() {
 
 
 void ETrace::Trace::insert(const TaskEvent &event) {
-    if( empty() ){
+    if( empty()  && (uuid == "")){
         boost::uuids::uuid uid = uuids::random_generator()();
         uuid = boost::uuids::to_string(uid);
     }
@@ -176,7 +186,7 @@ Trace& ETrace::Trace::operator+=(Trace &trace) {
     std::vector<Event::TaskEvent> ev(events.begin(), events.end());
     startTime = ev[0].timestamp;
 
-    // Falta sumar los resursos asignados
+    resources += trace.resources;
     
     return *this;
 };
@@ -239,9 +249,9 @@ bool ETrace::Trace::isComplete() {
     if(event[0].event_type != EventType::submit)
         return false;
     auto search = FinalEvents.find(event[sz].event_type);
-    if( search != FinalEvents.end() )
+    if( search == FinalEvents.end() )
         return false;
-    for(unsigned i=0; i<sz; i++)
+    for(unsigned i=0; i<sz-1; i++) 
         if(!validateEventChange(event[i].event_type,event[i+1].event_type))
             return false;
     return true;
@@ -296,6 +306,4 @@ string ETrace::Trace::to_json() const
     "]," +
     resources.to_json() +
     "}";
-
-    return json;
 }

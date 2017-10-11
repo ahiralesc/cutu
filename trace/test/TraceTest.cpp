@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_SUITE(trace)
 *   3. empty, evaluate the container is/not empty 
 *   4. size, evaluate the number of stored events. Expected: 1
 */
-/*
 BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 {
     string json =  "{"
@@ -97,7 +96,6 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
                 (t2.get_user() == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3"); 
     if(eval)
         states.set(1);
-
     // Test 3
     if(!t2.empty() && t1.empty())
         states.set(2);
@@ -108,7 +106,7 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }
-*/
+
 
 /**
 *   Test cases:
@@ -123,7 +121,7 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 *    2. merge,
 *       Trace 1 and 2 are merged. No enforcement is made to verify events are disjoint prior merging.
 *       
-*/
+*/ 
 BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
     string trace1 =  "{"
@@ -144,7 +142,7 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
         "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_ram\": 0.5,"
         "\"norm_req_disk\": 0.1,"
         "\"constraints\": true"
         "},"
@@ -158,8 +156,8 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
+        "\"norm_req_cores\": 0.2,"
+        "\"norm_req_ram\": 0.5,"
         "\"norm_req_disk\": 0.1,"
         "\"constraints\": true"
         "}"
@@ -193,9 +191,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
-        "\"norm_req_disk\": 0.1,"
+        "\"norm_req_cores\": 0.3,"
+        "\"norm_req_ram\": 0.5,"
+        "\"norm_req_disk\": 1.0,"
         "\"constraints\": true"
         "}";
 
@@ -209,9 +207,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
-        "\"norm_req_disk\": 0.1,"
+        "\"norm_req_cores\": 0.4,"
+        "\"norm_req_ram\": 0.5,"
+        "\"norm_req_disk\": 0.9,"
         "\"constraints\": true"
         "}";
 
@@ -225,9 +223,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
-        "\"norm_req_disk\": 0.1,"
+        "\"norm_req_cores\": 0.5,"
+        "\"norm_req_ram\": 0.5,"
+        "\"norm_req_disk\": 0.8,"
         "\"constraints\": true"
         "}";
 
@@ -241,9 +239,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
-        "\"norm_req_disk\": 0.1,"
+        "\"norm_req_cores\": 0.6,"
+        "\"norm_req_ram\": 0.5,"
+        "\"norm_req_disk\": 0.7,"
         "\"constraints\": true"
         "}";
 
@@ -258,9 +256,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
         "\"user_name\": \"3A\","
         "\"scheduling_class\": 3,"
         "\"priority\": 255,"
-        "\"norm_req_cores\": 0.1,"
-        "\"norm_req_ram\": 0.1,"
-        "\"norm_req_disk\": 0.1,"
+        "\"norm_req_cores\": 0.7,"
+        "\"norm_req_ram\": 0.5,"
+        "\"norm_req_disk\": 0.6,"
         "\"constraints\": true"
         "}";
 
@@ -287,14 +285,9 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
     if(t1.time_stamp() == 5 && t1.size() == 7)
         states.set(2);
 
-    std::cout << std::endl << t1.to_json() << std::endl;
 
     BOOST_CHECK_EQUAL(states.all(),true);
 }
-
-
-
-
 
 
 /** 
@@ -319,7 +312,7 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
 *   - The traces was resubmitted
 *   - The trace failed
 *   Thus, tests 8, 9, 10, 13, 14 are true
-*//*
+*/ 
 BOOST_AUTO_TEST_CASE( operation_tests )
 {
     string incomplete_trace =  "{"
@@ -587,6 +580,6 @@ string complete_trace =  "{"
 
     //std::cout << std::endl << states << std::endl;
     BOOST_CHECK_EQUAL(states.all(),true);
-} */
+}
 
 BOOST_AUTO_TEST_SUITE_END()
