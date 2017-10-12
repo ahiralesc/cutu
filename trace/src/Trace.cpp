@@ -92,7 +92,6 @@ ETrace::Trace::Trace(const string &json)
     Document d;
     d.Parse(json.c_str());
 
-    tid = d["trace_id"].GetString();
     jid = d["job_id"].GetUint64();
     user = d["user_name"].GetString();
     uuid = d["uuid"].GetString();
@@ -159,7 +158,6 @@ void ETrace::Trace::insert(const TaskEvent &event) {
 
     if(jid == 0) {
         jid  = event.job_id;
-        tid  = event.id; //MAY DEPRECATE
         user = event.user_name;
     }
 };
@@ -167,7 +165,6 @@ void ETrace::Trace::insert(const TaskEvent &event) {
 
 void ETrace::Trace::clear() {
     jid = -1;
-    tid.clear();
     user.clear();
     uuid.clear();
     startTime = -1;
@@ -297,7 +294,6 @@ string ETrace::Trace::to_json() const
     
     string json =
     "{"
-    "\"trace_id\":\"" +   tid + "\","
     "\"job_id\":" +     std::to_string(jid) + ","
     "\"user_name\":\"" +  user + "\","
     "\"uuid\":\"" + uuid + "\","

@@ -109,39 +109,17 @@ int main(int argc, char** argv)
 *   Coordinates the translation process
 */
 void GUTTAccept::translate(string &line) {
-
-    TaskEvent ne{line};
-
-    auto it  = traces.equal_range(ne.id);
-    int size = distance( it.first, it.second );
-    
-    if( size == 0) {
-        Trace trace{ne};
-        traces.insert(pair<string,Trace>(ne.id, trace));
+    TaskEvent event{line};
+    // Considera borar id en traza
+    auto elem = traces.find(ne.jid);
+    if( elem == traces.end() ) {
+        Trace trace{};
+        trace.insert(event);
+        traces.insert(pair<string,Trace>(event.jid,trace));
     } else {
-        // One or more traces with task index were found
-        // Select the one with time stamp closest to values[1]
-        long minLength = LLONG_MAX;
-        Trace *trace;
-        for(auto value = it.first; value != it.second; ++value) {
-            Trace *old_trace = &value->second;
-            long length = old_trace->distance(ne);
-            if( length < minLength )
-                trace = old_trace;
-        }
-         
-        // Gets the last registered state
-        TaskEvent le = trace->last_event();
-          
-        // Validate if the transition is valid or not
-        if(validateStateChange(le.event_type,ne.event_type)) {
-            trace->addEvent( ne );
-        } else {
-        // A new trace started
-            Trace trace{ne};
-            traces.insert( pair<string,Trace>( ne.id, trace ));
-        }
-    } 
+        Trace trace* = &elem->second;
+        trace.insert(event);
+    }
 }
 
 

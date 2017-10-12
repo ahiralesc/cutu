@@ -31,7 +31,6 @@ BOOST_AUTO_TEST_SUITE(JBIOTest)
 BOOST_AUTO_TEST_CASE( emptyness ) 
 {
     string json =  "{"
-    "\"trace_id\":\"1\","
     "\"job_id\":2902878580,"
     "\"user_name\":\"\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
@@ -80,7 +79,6 @@ BOOST_AUTO_TEST_CASE( emptyness )
 BOOST_AUTO_TEST_CASE( first_element_access )
 {
      string json =  "{"
-    "\"trace_id\":\"29028785801155\","
     "\"job_id\":2902878580,"
     "\"user_name\":\"\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
@@ -128,69 +126,70 @@ BOOST_AUTO_TEST_CASE( first_element_access )
 
     Trace t2 = reader.next();
     
-    bool eval = (t2.get_tid() == t1.get_tid()) &&
-                (t2.get_jid() == t1.get_jid());
+    bool eval = (t2.get_jid() == t1.get_jid());
 
     BOOST_CHECK_EQUAL(eval,true);
 }
 
-
 BOOST_AUTO_TEST_CASE( last_element_access )
 {
-     string json =  
-        "{\"trace_id\":\"15\","
-        "\"job_id\":15,"
-        "\"user_name\":\"\","
-        "\"uuid\":\"484f04e2-545a-40ff-84e3-a3a6b5eb791f\","
-        "\"timestamp\":502062044694,"
-        "\"events\": ["
-            "{\"timestamp\":504524563872,"
-            "\"missing_info\":4294967295,"
-            "\"job_id\":698645235,"
-            "\"task_index\":0,"
-            "\"machine_id\":18446744073709551615,"
-            "\"event_type\":0,"
-            "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
-            "\"scheduling_class\":2,"
-            "\"priority\":9,"
-            "\"norm_req_cores\":0.012500,"
-            "\"norm_req_ram\":0.023860,"
-            "\"norm_req_disk\":0.000193,"
-            "\"constraints\":0},"
-            "{\"timestamp\":504526396850,"
-            "\"missing_info\":4294967295,"
-            "\"job_id\":698645235,"
-            "\"task_index\":0,"
-            "\"machine_id\":6565363,"
-            "\"event_type\":1,"
-            "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
-            "\"scheduling_class\":2,"
-            "\"priority\":9,"
-            "\"norm_req_cores\":0.012500,"
-            "\"norm_req_ram\":0.023860,"
-            "\"norm_req_disk\":0.000193,"
-            "\"constraints\":0},"
-            "{\"timestamp\":504704099910,"
-            "\"missing_info\":4294967295,"
-            "\"job_id\":698645235,"
-            "\"task_index\":0,"
-            "\"machine_id\":6565363,"
-            "\"event_type\":3,"
-            "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
-            "\"scheduling_class\":2,"
-            "\"priority\":9,"
-            "\"norm_req_cores\":0.012500,"
-            "\"norm_req_ram\":0.023860,"
-            "\"norm_req_disk\":0.000193,"
-            "\"constraints\":0}],"
-            "\"avg_alloc_resources\": {"
+    string json = "{"
+    "\"job_id\":15,"
+    "\"user_name\":\"AA\","
+    "\"uuid\":\"484f04e2-545a-40ff-84e3-a3a6b5eb791f\","
+    "\"timestamp\":502062044694,"
+    "\"events\": ["
+        "{"
+        "\"timestamp\":504524563872,"
+        "\"missing_info\":4294967295,"
+        "\"job_id\":698645235,"
+        "\"task_index\":0,"
+        "\"machine_id\":18446744073709551615,"
+        "\"event_type\":0,"
+        "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
+        "\"scheduling_class\":2,"
+        "\"priority\":9,"
+        "\"norm_req_cores\":0.012500,"
+        "\"norm_req_ram\":0.023860,"
+        "\"norm_req_disk\":0.000193,"
+        "\"constraints\":0"
+        "},{"
+        "\"timestamp\":504526396850,"
+        "\"missing_info\":4294967295,"
+        "\"job_id\":698645235,"
+        "\"task_index\":0,"
+        "\"machine_id\":6565363,"
+        "\"event_type\":1,"
+        "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
+        "\"scheduling_class\":2,"
+        "\"priority\":9,"
+        "\"norm_req_cores\":0.012500,"
+        "\"norm_req_ram\":0.023860,"
+        "\"norm_req_disk\":0.000193,"
+        "\"constraints\":0"
+        "},{"
+        "\"timestamp\":504704099910,"
+        "\"missing_info\":4294967295,"
+        "\"job_id\":698645235,"
+        "\"task_index\":0,"
+        "\"machine_id\":6565363,"
+        "\"event_type\":3,"
+        "\"user_name\":\"9bg757+k8xeWFApxOzOS5nnVAHYpBBQ+Pf1mEnsTZsQ=\","
+        "\"scheduling_class\":2,"
+        "\"priority\":9,"
+        "\"norm_req_cores\":0.012500,"
+        "\"norm_req_ram\":0.023860,"
+        "\"norm_req_disk\":0.000193,"
+        "\"constraints\":0"
+        "}],"
+        "\"avg_alloc_resources\": {"
         "\"avg_norm_alloc_cores\":0.012500,"
         "\"avg_norm_alloc_ram\":0.023860,"
-        "\"avg_norm_alloc_disk\":0.000193 }}";
+        "\"avg_norm_alloc_disk\":0.000193 }"
+    "}";
 
 
     Trace t1{json};
-
     string in_file{"../../schema/small.json"};
     JSONTraceBuffIOS reader{in_file,5};
     Trace t2;
@@ -198,14 +197,12 @@ BOOST_AUTO_TEST_CASE( last_element_access )
 
     do{
         t2 = reader.next();
-        eval = (t2.get_tid() == t1.get_tid()) && 
-               (t2.get_jid() == t1.get_jid());
+        eval = (t2.get_jid() == t1.get_jid());
         if(eval)
             break;
     }while(!reader.empty());
 
     BOOST_CHECK_EQUAL(eval,true);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

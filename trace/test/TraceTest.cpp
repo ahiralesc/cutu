@@ -39,7 +39,6 @@ BOOST_AUTO_TEST_SUITE(trace)
 BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 {
     string json =  "{"
-    "\"trace_id\": \"3689348814741910300\","
     "\"job_id\": 3689348814741910300,"
     "\"user_name\": \"3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
@@ -90,8 +89,7 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
     
     // Test 2
     Trace t2{json};
-    bool eval = (t2.get_tid() == "3689348814741910300") &&
-                (t2.get_jid() == 3689348814741910300) &&
+    bool eval = (t2.get_jid() == 3689348814741910300) &&
                 (t2.get_uuid() == "5c319860-5f51-4093-aacb-778cfcab65cc") &&
                 (t2.get_user() == "3Adsf4#%Zzkd/32SKkfAk3Adsf4#%Zzkd/32SKkfAkw3"); 
     if(eval)
@@ -125,7 +123,6 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
     string trace1 =  "{"
-    "\"trace_id\": \"1\","
     "\"job_id\": 1,"
     "\"user_name\": \"3A\","
     "\"uuid\":\"5c\","
@@ -316,7 +313,6 @@ BOOST_AUTO_TEST_CASE( modifier_tests )
 BOOST_AUTO_TEST_CASE( operation_tests )
 {
     string incomplete_trace =  "{"
-    "\"trace_id\": \"1\","
     "\"job_id\": 10,"
     "\"user_name\": \"A\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
@@ -374,7 +370,6 @@ BOOST_AUTO_TEST_CASE( operation_tests )
 
 
 string complete_trace =  "{"
-    "\"trace_id\": \"1\","
     "\"job_id\": 11,"
     "\"user_name\": \"A\","
     "\"uuid\":\"5c319860-5f51-4093-aacb-778cfcab65cc\","
@@ -490,7 +485,7 @@ string complete_trace =  "{"
     "}"
     "}";
 
-    bitset<19> states;
+    bitset<18> states;
     states.reset();
 
     // Test 1
@@ -517,66 +512,62 @@ string complete_trace =  "{"
     if(trace.get_jid() == 10)
         states.set(1);
 
-    // Test 3
-    if(trace.get_tid() == "1")
+    // Test 3 
+    if(trace.get_uuid() == "5c319860-5f51-4093-aacb-778cfcab65cc")
         states.set(2);
 
-    // Test 4 
-    if(trace.get_uuid() == "5c319860-5f51-4093-aacb-778cfcab65cc")
-        states.set(3);
-
-    // Test 5
+    // Test 4
     if(trace.get_user() == "A")
-        states.set(4);
+        states.set(3);
     
-    // Test 6
+    // Test 5
     if(trace.time_stamp() == 10)
+        states.set(4);
+
+    // Test 6
+    if(trace.evicted() == false)
         states.set(5);
 
     // Test 7
-    if(trace.evicted() == false)
+    if(trace._failed() == false)
         states.set(6);
 
     // Test 8
-    if(trace._failed() == false)
+    if(trace.finished() == false)
         states.set(7);
 
     // Test 9
-    if(trace.finished() == false)
+    if(trace.completed() == false)
         states.set(8);
 
     // Test 10
-    if(trace.completed() == false)
+    if(trace.killed() == false)
         states.set(9);
 
     // Test 11
-    if(trace.killed() == false)
+    if(trace.lost() == false)
         states.set(10);
 
     // Test 12
-    if(trace.lost() == false)
+    if(trace.isComplete() == false)
         states.set(11);
 
     // Test 13
-    if(trace.isComplete() == false)
-        states.set(12);
-
-    // Test 14
     if(trace.isResubmitted() == false)
-        states.set(13);
+        states.set(12);
 
     // Tests  8, 9, 10, 13, 14 are reevaluated using a trace that failes, was resubmitted and completed
     Trace ctrace{complete_trace};
     if(ctrace._failed() == true)
-        states.set(14);
+        states.set(13);
     if(ctrace.finished() == true)
-        states.set(15);
+        states.set(14);
     if(ctrace.completed() == true)
-        states.set(16);
+        states.set(15);
     if(ctrace.isComplete() == true)
-        states.set(17);
+        states.set(16);
     if(ctrace.isResubmitted() == true)
-        states.set(18);
+        states.set(17);
 
     //std::cout << std::endl << states << std::endl;
     BOOST_CHECK_EQUAL(states.all(),true);
