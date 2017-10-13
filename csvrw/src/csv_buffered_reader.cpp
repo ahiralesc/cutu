@@ -7,29 +7,28 @@ using namespace std;
 csv_buffered_reader::csv_buffered_reader(string ifs, long nrows) : 
 		num_rows{nrows} {
     rows.clear();
-
-    if( !ifs.empty() ) {
-        if_str.open(ifs);
-        if( !if_str ) {
-            cerr << "Error: could not open file" << endl;
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        cerr << "Error: no file or incorrect path provided" << endl;
+    finalized = false;
+    ifstrm.open(ifs);
+    if(!ifstrm) {
+        cerr << "Error: could not open file" << endl;
         exit(EXIT_FAILURE);
     }
+    initialized = true;
 }
 
 
-void csv_buffered_reader::parse( ) {
+void csv_buffered_reader::ensureBufferRefill(){
     string row;
 
-    for(int i=0; i<=num_rows; i++) {
-        getline( if_str, row );
-        if( row.size() > 0 )
-            rows.push_back( row );
-        else
-            break;
+    if(rows.empty() && !finalized){
+        for(int i=0; i<num_rows; i++) {
+            getline(ifstrm,row);
+            if(ifstrm.eof()) {
+                finalized = true;
+                return;
+            } else 
+                rows.push_back(row);
+        }
     }
 }
 
@@ -37,19 +36,15 @@ void csv_buffered_reader::parse( ) {
 string csv_buffered_reader::next( ) {
     string row;
 
-    if( rows.empty() ) {
-        parse();
-    } else {
+    ensureBufferRefill();
+    if( !empty() ) {
         row = rows[0];
-        rows.erase( rows.begin());
-    }       
-    
+        rows.erase(rows.begin());
+    }
     return row;
 } 
 
 
 bool csv_buffered_reader::empty() {
-    return rows.empty();
+    return finalized && rows.empty();
 }
-
-

@@ -25,8 +25,13 @@ class csv_buffered_reader {
         /*
         * The input file stream  
         */
-        //istream *istr;
-        std::ifstream if_str;
+        std::ifstream ifstrm;
+
+        /*
+        * Buffer reader initialization/finaliztion
+        */
+        bool initialized{false};
+        bool finalized{false};
         
 
     public:
@@ -38,19 +43,18 @@ class csv_buffered_reader {
         * - The file input stream
         * - The number of rows in the CSV file
         */
-        //csv_buffered_reader(istream &str, long nrows);
         csv_buffered_reader(std::string ifs, long nrows);
 
         /*
         * Destructore closes the file strem
         */
-        ~csv_buffered_reader() { if_str.close(); };
+        ~csv_buffered_reader() { ifstrm.close(); };
 
 
         /*
         *  Ensures the queue is refilled if empty
         */ 
-        void parse( );
+        void ensureBufferRefill( );
 
 
         /*

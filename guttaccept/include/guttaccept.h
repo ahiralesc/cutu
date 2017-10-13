@@ -27,12 +27,11 @@ class GUTTAccept {
 
 
     /* The of Task execution traces */
-    std::multimap<std::string,ETrace::Trace> traces;
-
+    std::map<unsigned long long,ETrace::Trace> traces;
   
     /* The set of job runtimes */
     void translate (std::string&);
-    
+
 
     public :
 

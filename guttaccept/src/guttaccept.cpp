@@ -109,16 +109,16 @@ int main(int argc, char** argv)
 *   Coordinates the translation process
 */
 void GUTTAccept::translate(string &line) {
-    TaskEvent event{line};
+    TaskEvent event{line,"cvs"};
     // Considera borar id en traza
-    auto elem = traces.find(ne.jid);
+   auto elem = traces.find(event.job_id);
     if( elem == traces.end() ) {
         Trace trace{};
         trace.insert(event);
-        traces.insert(pair<string,Trace>(event.jid,trace));
+        traces.insert(pair<unsigned long long,Trace>(event.job_id,trace));
     } else {
-        Trace trace* = &elem->second;
-        trace.insert(event);
+       Trace *trace = &elem->second;
+       trace->insert(event);
     }
 }
 
@@ -164,9 +164,7 @@ void GUTTAccept::process( )
     rfos << "{\"traces\":[";
 
     // Generating output to files 
-    for( multimap<string,ETrace::Trace>::iterator it = traces.begin();
-        it != traces.end(); ++it ) {
-
+    for( multimap<unsigned long long,ETrace::Trace>::iterator it = traces.begin(); it != traces.end(); ++it ) {
         if( (*it).second.isComplete() )
             if( fta ) {
                 afos << (*it).second.to_json();
