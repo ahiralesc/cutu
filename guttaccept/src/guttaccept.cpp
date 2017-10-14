@@ -62,16 +62,16 @@ Modes of execution: \n\
 guttaccept -f file.csv -a <accepted trace filename>.json -r <rejected trace filename>.json", ' ', "0.1");
  
         // List of value arguments
-        ValueArg<int> numOfRows("b", "buffer","Number of rows to buffer", false, -1, "int");
+        ValueArg<int> numOfRows("b", "buffer","Number of rows to buffer", false, 1000, "int");
         cmd.add( numOfRows );
  
-        ValueArg<string> in_file_name("f", "in_file", "The file name of the Google cluster traces to parse", false, "", "string");
+        ValueArg<string> in_file_name("f", "in_file", "The file name of the Google cluster traces to parse", false, "part-00000-of-00500.csv", "string");
         cmd.add( in_file_name );
 
-        ValueArg<string> accepted_os("a", "accepted", "The file name where the accepted traces will be stored", true, "accept.json", "string");
+        ValueArg<string> accepted_os("a", "accepted", "The file name where the accepted traces will be stored", false, "accept.json", "string");
         cmd.add( accepted_os );
 
-        ValueArg<string> rejected_os("r", "rejected", "The file name where the rejected traces will be stored", true, "reject.json", "string");
+        ValueArg<string> rejected_os("r", "rejected", "The file name where the rejected traces will be stored", false, "reject.json", "string");
         cmd.add( rejected_os );
 
         // Parse the argumnets
@@ -80,10 +80,6 @@ guttaccept -f file.csv -a <accepted trace filename>.json -r <rejected trace file
         in_file = in_file_name.getValue();
         aos = accepted_os.getValue();
         ros = rejected_os.getValue();
-
-        // Set default behaviour
-        if( num_rows == -1 )
-            num_rows = 1000;
             
         }catch(ArgException &e) {
             cerr << "Error: " << e.error() << " for argument " << e.argId() << endl;
@@ -151,8 +147,8 @@ void GUTTAccept::process( )
     }
 
 
-    ofstream afos( aos );
-    ofstream rfos( ros );
+    ofstream afos( aos, std::ofstream::trunc );
+    ofstream rfos( ros, std::ofstream::trunc );
 
     if( !afos || !rfos ) {
         cerr << "Error: could not open file for output" << endl;
@@ -163,21 +159,32 @@ void GUTTAccept::process( )
     afos << "{\"traces\":[";
     rfos << "{\"traces\":[";
 
+    int n = 0, complete =0, incomplete =0;
+
     // Generating output to files 
-    for( multimap<unsigned long long,ETrace::Trace>::iterator it = traces.begin(); it != traces.end(); ++it ) {
-        if( (*it).second.isComplete() )
+    for( map<unsigned long long,ETrace::Trace>::iterator it = traces.begin(); it != traces.end(); ++it ) {
+        if((*it).second.isComplete()) {
             if( fta ) {
                 afos << (*it).second.to_json();
                 fta = false;
-            } else
+            } else 
                 afos << "," << std::endl << (*it).second.to_json();
-        else
+            complete++;
+        }else{
             if( ftr ) {
                 rfos << (*it).second.to_json();
                 ftr = false;
-            } else
+            } else 
                 rfos << "," << std::endl << (*it).second.to_json();
+            incomplete++;
+        }
+        n++;
     }
+
+    std::cout << "Total traces : " << traces.size() << std::endl;
+    std::cout << "Validation (total counted:complete+incomplete) : " << n << " : " << complete + incomplete << std::endl;
+    std::cout << "Complete : " << complete << std::endl;
+    std::cout << "Incomplete : " << incomplete << std::endl;
 
     afos << "]}";
     rfos << "]}";

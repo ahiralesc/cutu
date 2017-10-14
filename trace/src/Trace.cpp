@@ -243,9 +243,10 @@ bool ETrace::Trace::lost() {
 bool ETrace::Trace::isComplete() {
     std::vector<Event::TaskEvent> event(events.begin(), events.end());
     unsigned sz = event.size();
+
     if(event[0].event_type != EventType::submit)
         return false;
-    auto search = FinalEvents.find(event[sz].event_type);
+    auto search = FinalEvents.find(event[sz-1].event_type);
     if( search == FinalEvents.end() )
         return false;
     for(unsigned i=0; i<sz-1; i++) 
@@ -290,7 +291,7 @@ string ETrace::Trace::to_json() const
     string ev;
     for(set<TaskEvent>::iterator it = events.begin(); it != events.end(); it++)
         ev += it->to_json() + ",";
-    ev.pop_back(); 
+    ev.pop_back();
     
     string json =
     "{"
@@ -302,4 +303,6 @@ string ETrace::Trace::to_json() const
     "]," +
     resources.to_json() +
     "}";
+
+    return json;
 }

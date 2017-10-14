@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( constructor_capacity_tests )
 *    2. merge,
 *       Trace 1 and 2 are merged. No enforcement is made to verify events are disjoint prior merging.
 *       
-*/ 
+*/
 BOOST_AUTO_TEST_CASE( modifier_tests )
 {    
     string trace1 =  "{"
