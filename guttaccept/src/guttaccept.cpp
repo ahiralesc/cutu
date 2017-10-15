@@ -65,7 +65,7 @@ guttaccept -f file.csv -a <accepted trace filename>.json -r <rejected trace file
         ValueArg<int> numOfRows("b", "buffer","Number of rows to buffer", false, 1000, "int");
         cmd.add( numOfRows );
  
-        ValueArg<string> in_file_name("f", "in_file", "The file name of the Google cluster traces to parse", false, "part-00000-of-00500.csv", "string");
+        ValueArg<string> in_file_name("f", "in_file", "The file name of the Google cluster traces to parse", false, "", "string");
         cmd.add( in_file_name );
 
         ValueArg<string> accepted_os("a", "accepted", "The file name where the accepted traces will be stored", false, "accept.json", "string");
@@ -159,8 +159,6 @@ void GUTTAccept::process( )
     afos << "{\"traces\":[";
     rfos << "{\"traces\":[";
 
-    int n = 0, complete =0, incomplete =0;
-
     // Generating output to files 
     for( map<unsigned long long,ETrace::Trace>::iterator it = traces.begin(); it != traces.end(); ++it ) {
         if((*it).second.isComplete()) {
@@ -169,22 +167,15 @@ void GUTTAccept::process( )
                 fta = false;
             } else 
                 afos << "," << std::endl << (*it).second.to_json();
-            complete++;
         }else{
             if( ftr ) {
                 rfos << (*it).second.to_json();
                 ftr = false;
             } else 
                 rfos << "," << std::endl << (*it).second.to_json();
-            incomplete++;
         }
-        n++;
+       // n++;
     }
-
-    std::cout << "Total traces : " << traces.size() << std::endl;
-    std::cout << "Validation (total counted:complete+incomplete) : " << n << " : " << complete + incomplete << std::endl;
-    std::cout << "Complete : " << complete << std::endl;
-    std::cout << "Incomplete : " << incomplete << std::endl;
 
     afos << "]}";
     rfos << "]}";
