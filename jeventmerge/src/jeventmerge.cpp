@@ -4,6 +4,8 @@
 #include <glob.h>
 #include <cmath>
 #include <climits>
+#include <thread>
+#include <mutex>
 #include "tclap/CmdLine.h"
 #include "JEventMerge.h"
 
@@ -23,6 +25,11 @@ string aos{};
 
 /* Rejected traces output file name */
 string ros{};
+
+
+std::mutex time_mutex;
+unsigned long long globalTime;
+std::unique_lock<std::mutex> gtl(globalTime);
 
 /**
 *  Parses the Command Line Arguments (CLA). Valid switches for this application are the following:
@@ -75,43 +82,63 @@ int main(int argc, char** argv)
 
 
 
+void processLog(JSONTraceBuffIOS log, int i) {
+    Trace trace = log.peek();
+    
+    if(trace.timestamp() > globalTime ){
+        std::lock_guard<std::mutex> 
+        threads[id] = trace.timestamo();
+        unlock();
+        std::this_thread::sleep_untill(
+    }
+
+    
+}
+
+void coordinator( ) {
+}
+
+
+
 void JEventMerge::process()
 {
-    const int num_traces = 100;
-    glob_t glob_result;
+    glob_t globbuf;
+    glob(infile.c_str(), GLOB_TILDE, NULL ,&globbuf);
 
-    glob(infile.c_str(), GLOB_TILDE, NULL ,&glob_result);
-    bitset<200> available_readers{false};
+    // A passive thread pool is created. Initially all threads will start. If the first event time
+    // stamo is greater than the global time, they go to slepp. 
+    std::vector<std::thread> pool;
+    for(unsigned int i=0; j<globbuf.gl_pathc; ++i)
+        pool.push_back(std::thread(&processLog, std::move(JSONTraceBuffIOS(globbuf.gl_pathv[i])),i));
+    std::for_each(pool.begin(),pool.end(),std::mem_fn(&std::thread::join));
+    
+    // A coordinator thread evaluates wich threads can be woken.
+    std::thread poolManager(&coordinator);
+
+    
     
     // Load buffered JSON readers 
-    available_readers.none();
-    for(unsigned int i=0; i<glob_result.gl_pathc; ++i){
-        available_readers.set(i);
-        logs.push_back(JSONTraceBuffIOS(glob_result.gl_pathv[i],num_traces));    
-        std::cout << "Bitacora cargada : " << glob_result.gl_pathv[i] << std::endl;
+    readers.none();
+    for(unsigned int i=0; i<globbuf.gl_pathc; ++i){
+        readers.set(i);
+        logs.push_back(JSONTraceBuffIOS(globbuf.gl_pathv[i],num_traces));    
+        //std::cout << "Bitacora cargada : " << glob_result.gl_pathv[i] << std::endl;
     }
-    std::cout << "Check point one" << std::endl;
     
     while(available_readers.any()){
         
-        // Prepare the priority queue
+        // Fill the priority queue
         for(int i=0; i<logs.size(); ++i){
-            std::cout << "Check point two " << i << std::endl;
             if(logs[i].empty()) {
-                available_readers.reset(i);
-                std::cout << "Resetted : " << i << std::endl;
+                readers.reset(i);
             }else {
                 int count{0};
-                while(!logs[i].empty() && count < num_traces) {
+                while(!logs[i].empty()) {
                     Trace trace = logs[i].next();
-                    std::cout << "Trace : " << trace.to_json() << std::endl;
                     queue.push(trace);
-                    count++;
                 }
             }
-            std::cout << "Tamano : " << logs.size() << std::endl;
         } 
-        std::cout << "Check point three\n";
 
         // Merge traces with existing traces.
         while(!queue.empty()) {
