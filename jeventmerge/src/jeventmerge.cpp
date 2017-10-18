@@ -73,10 +73,8 @@ jeventmerge -f <path to JSON logs> -a <accepted trace filename>.json -r <rejecte
 int main(int argc, char** argv)
 {
     parseCLA(argc,argv);
-
     JEventMerge parser{in_file, aos, ros};
     parser.process();
-
     return 0;
 } 
 
@@ -84,17 +82,18 @@ int main(int argc, char** argv)
 
 void processLog(JSONTraceBuffIOS log, int i) {
     Trace trace = log.peek();
-    
-    if(trace.timestamp() > globalTime ){
-        std::lock_guard<std::mutex> 
-        threads[id] = trace.timestamo();
-        unlock();
-        std::this_thread::sleep_untill(
-    }
+    time[i] = trace.timestamp();
+    if(time[i] < globalTime) {
 
-    
+    }    
 }
 
+
+/**
+*   The coordinator keeps track of time (global time). It uses the notion of global time, time window, and time instance 
+*   of the first event in each log to determine of the log should be processed or not.  If an overlap occurs between the 
+*   first event time instance and the time window, the log is processed. Otherwise, processing of the log is delayed.
+*/
 void coordinator( ) {
 }
 
@@ -104,6 +103,7 @@ void JEventMerge::process()
 {
     glob_t globbuf;
     glob(infile.c_str(), GLOB_TILDE, NULL ,&globbuf);
+
 
     // A passive thread pool is created. Initially all threads will start. If the first event time
     // stamo is greater than the global time, they go to slepp. 
