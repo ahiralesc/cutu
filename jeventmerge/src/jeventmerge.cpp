@@ -6,6 +6,7 @@
 #include <climits>
 #include <thread>
 #include <mutex>
+#include <set>
 #include "tclap/CmdLine.h"
 #include "JEventMerge.h"
 
@@ -27,9 +28,11 @@ string aos{};
 string ros{};
 
 
-std::mutex time_mutex;
+std::mutex gtm;                 // Global time mutex
+std::mutex stm;                 // Reader state mutex
+std::condition_variable trec;   //time recorder event completed
+std::set<std::pair<unsigned long long,std::thread::id>,Timestamp_Comparator> readers;
 unsigned long long globalTime;
-std::unique_lock<std::mutex> gtl(globalTime);
 
 /**
 *  Parses the Command Line Arguments (CLA). Valid switches for this application are the following:
@@ -80,12 +83,18 @@ int main(int argc, char** argv)
 
 
 
-void processLog(JSONTraceBuffIOS log, int i) {
-    Trace trace = log.peek();
-    time[i] = trace.timestamp();
-    if(time[i] < globalTime) {
+void bufferedJSONReader(string log, int rl) {
+    JSONTraceBuffIOS reader{log};
+    ETrace trace = reader.next();
 
-    }    
+    stm.lock();
+    if( !trace.empty()){
+        readers.put(std::tuple<trace.timestamp(),std::this_thread::get_id()>);
+        state.set(i);
+    }
+    stm.unlock();
+    if( rl == 0 )
+        trec.notify_one();
 }
 
 
@@ -95,6 +104,13 @@ void processLog(JSONTraceBuffIOS log, int i) {
 *   first event time instance and the time window, the log is processed. Otherwise, processing of the log is delayed.
 */
 void coordinator( ) {
+    std::unique_lock<std::mutex> lk(gtm);    
+    trec.wait(lk, []{ return readers.all(); }); //Como crear este arreglo
+    std::vector<unsigned long long> time(readers.begin(), readers.end());
+    globalTime = time[0];
+    lk.unlock();
+    while(true) {
+    }
 }
 
 
@@ -109,7 +125,7 @@ void JEventMerge::process()
     // stamo is greater than the global time, they go to slepp. 
     std::vector<std::thread> pool;
     for(unsigned int i=0; j<globbuf.gl_pathc; ++i)
-        pool.push_back(std::thread(&processLog, std::move(JSONTraceBuffIOS(globbuf.gl_pathv[i])),i));
+        pool.push_back(std::thread(&processLog, string(globbuf.gl_pathv[i]),i));
     std::for_each(pool.begin(),pool.end(),std::mem_fn(&std::thread::join));
     
     // A coordinator thread evaluates wich threads can be woken.
