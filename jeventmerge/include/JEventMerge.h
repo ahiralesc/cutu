@@ -4,11 +4,13 @@
 #include <map>
 #include <climits>
 #include <thread>
+#include <condition_variable>
 #include <string>
 #include <queue>
 #include <boost/dynamic_bitset.hpp>
 #include "Trace.h"
 #include "JSONTraceBuffIOS.h"
+#include "Barrier.h"
 
 class JEventMerge{
     private:
@@ -28,15 +30,17 @@ class JEventMerge{
     std::mutex gtm;                 // Global time mutex
     std::mutex stm;                 // Reader state mutex
     std::condition_variable trec;   // Time recorded completion event
+    Barrier barrier{0};             // log reader barrier
 
     // Log and log reader state
-    std::dynamic_bitset<> state;
-    std::map<int,RCB> reader;
+    boost::dynamic_bitset<> state;
+    std::map<int,RCB> readers;
 
     // Global time
     unsigned long long globalTime{ULLONG_MAX};
+public:
 
-    void reader(string log, int i);
+    void logReader(std::string log, int i);
     void coordinator();
 
     /*
@@ -48,11 +52,10 @@ class JEventMerge{
     std::vector<std::string> incompleteTraces;
     */
 
-    public:
     
     JEventMerge(std::string in_file, std::string _aos, std::string _ros) :
     infile{in_file}, aos{_aos}, ros{_ros} { };
-    void process();
+    //void process();
 };
 
 #endif

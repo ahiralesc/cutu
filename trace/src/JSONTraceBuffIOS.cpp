@@ -19,7 +19,7 @@ using namespace std;
 using namespace ETrace;
 
 
-JSONTraceBuffIOS::JSONTraceBuffIOS(string infile, int ntraces = 300) :
+JSONTraceBuffIOS::JSONTraceBuffIOS(string infile, int ntraces) :
     in_file{infile}, num_traces{ntraces} {
     traces.clear();
     initialized = false;

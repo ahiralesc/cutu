@@ -77,25 +77,24 @@ int main(int argc, char** argv)
 
 
 
-void JEventMerge::reader(string log, int i) {
-    JSONTraceBuffIOS reader{log};
+void JEventMerge::logReader(string log, int i) {
+    JSONTraceBuffIOS reader(log);
 
     if(!reader.empty()){
         RCB rcb;
-        rcb.id = this_thread::id;
-        rcb->breader = &reader;
-        unsigned long long ltime = reader.peek().timestamp();
-
+        rcb.id = std::this_thread::get_id();
+        rcb.breader = &reader;
+        unsigned long long ltime = reader.peek().time_stamp();
         stm.lock();
         if(ltime < globalTime)
             globalTime = ltime;        
-        reader[i] = rcb;
+        readers.insert(std::pair<int,RCB>(i,rcb));
         state[i] = 1;
         stm.unlock();
     }
-
-    
-    if( i == 0 )
+   
+    barrier.wait();
+    if( i == 0 ) 
         trec.notify_one();
 }
 
@@ -105,24 +104,29 @@ void JEventMerge::reader(string log, int i) {
 *   of the first event in each log to determine of the log should be processed or not.  If an overlap occurs between the 
 *   first event time instance and the time window, the log is processed. Otherwise, processing of the log is delayed.
 */
-void coordinator( ) 
+void JEventMerge::coordinator( ) 
 {
     glob_t globbuf;
-    glob(infile.c_str(), GLOB_TILDE, NULL, &globbuf);
+    glob(infile.c_str(), GLOB_NOSORT, NULL, &globbuf);
+
+    std::cout << "Bitacoras: " << globbuf.gl_pathc << std::endl;
+    barrier.reset(globbuf.gl_pathc);
 
     // Set the size of the readers state
-    state = globbuf.gl_pathc-1;
+    boost::dynamic_bitset<> st(globbuf.gl_pathc);
+    state = std::move(st);
     
     std::vector<std::thread> pool;
     for(unsigned i=0; i<globbuf.gl_pathc; ++i)
-        pool.push_back(JEventMerge::readLog, this, string(globbuf.gl_pathv[i]), i);
+        pool.push_back(std::thread(&JEventMerge::logReader, this, string(globbuf.gl_pathv[i]), i));
     std::for_each(pool.begin(), pool.end(), std::mem_fn(&std::thread::join));
     
     std::unique_lock<std::mutex> lk(gtm);    
-    trec.wait(lk, []{ return state.all(); }); 
-    std::vector<unsigned long long> time(readers.begin(), readers.end());
-    globalTime = time[0];
+    trec.wait(lk, [this]{return state.all();}); 
+    std::cout << "El tiempo global es : " << globalTime << std::endl;
     lk.unlock();
+
+    globfree(&globbuf);
 }
 
 
