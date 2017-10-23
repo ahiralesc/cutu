@@ -21,8 +21,9 @@ limitations under the License.
 
 class JSONTraceBuffIOS {
     public:
-        JSONTraceBuffIOS(std::string, int);
+        JSONTraceBuffIOS(std::string, int sz);
         ETrace::Trace next();
+        ETrace::Trace peek();
         bool empty();
 
     private:

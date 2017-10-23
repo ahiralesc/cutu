@@ -19,7 +19,7 @@ using namespace std;
 using namespace ETrace;
 
 
-JSONTraceBuffIOS::JSONTraceBuffIOS(string infile, int ntraces) :
+JSONTraceBuffIOS::JSONTraceBuffIOS(string infile, int ntraces = 300) :
     in_file{infile}, num_traces{ntraces} {
     traces.clear();
     initialized = false;
@@ -108,6 +108,21 @@ Trace JSONTraceBuffIOS::next() {
     else{
         json = traces.front();
         traces.erase(traces.begin());
+        Trace trace{json};
+        return trace;
+    }
+}
+
+
+Trace JSONTraceBuffIOS::peek() {
+    Trace empty{};
+    string json{};
+
+    ensureBufferRefill();
+    if(traces.size() == 0)
+        return empty;
+    else{
+        json = traces.front();
         Trace trace{json};
         return trace;
     }

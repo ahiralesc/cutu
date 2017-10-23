@@ -28,12 +28,6 @@ string aos{};
 string ros{};
 
 
-std::mutex gtm;                 // Global time mutex
-std::mutex stm;                 // Reader state mutex
-std::condition_variable trec;   //time recorder event completed
-std::set<std::pair<unsigned long long,std::thread::id>,Timestamp_Comparator> readers;
-unsigned long long globalTime;
-
 /**
 *  Parses the Command Line Arguments (CLA). Valid switches for this application are the following:
 *  - r, specifies the number of rows that will be loaded in memory.
@@ -77,23 +71,31 @@ int main(int argc, char** argv)
 {
     parseCLA(argc,argv);
     JEventMerge parser{in_file, aos, ros};
-    parser.process();
+    parser.coordinator();
     return 0;
 } 
 
 
 
-void bufferedJSONReader(string log, int rl) {
+void JEventMerge::reader(string log, int i) {
     JSONTraceBuffIOS reader{log};
-    ETrace trace = reader.next();
 
-    stm.lock();
-    if( !trace.empty()){
-        readers.put(std::tuple<trace.timestamp(),std::this_thread::get_id()>);
-        state.set(i);
+    if(!reader.empty()){
+        RCB rcb;
+        rcb.id = this_thread::id;
+        rcb->breader = &reader;
+        unsigned long long ltime = reader.peek().timestamp();
+
+        stm.lock();
+        if(ltime < globalTime)
+            globalTime = ltime;        
+        reader[i] = rcb;
+        state[i] = 1;
+        stm.unlock();
     }
-    stm.unlock();
-    if( rl == 0 )
+
+    
+    if( i == 0 )
         trec.notify_one();
 }
 
@@ -103,30 +105,30 @@ void bufferedJSONReader(string log, int rl) {
 *   of the first event in each log to determine of the log should be processed or not.  If an overlap occurs between the 
 *   first event time instance and the time window, the log is processed. Otherwise, processing of the log is delayed.
 */
-void coordinator( ) {
+void coordinator( ) 
+{
+    glob_t globbuf;
+    glob(infile.c_str(), GLOB_TILDE, NULL, &globbuf);
+
+    // Set the size of the readers state
+    state = globbuf.gl_pathc-1;
+    
+    std::vector<std::thread> pool;
+    for(unsigned i=0; i<globbuf.gl_pathc; ++i)
+        pool.push_back(JEventMerge::readLog, this, string(globbuf.gl_pathv[i]), i);
+    std::for_each(pool.begin(), pool.end(), std::mem_fn(&std::thread::join));
+    
     std::unique_lock<std::mutex> lk(gtm);    
-    trec.wait(lk, []{ return readers.all(); }); //Como crear este arreglo
+    trec.wait(lk, []{ return state.all(); }); 
     std::vector<unsigned long long> time(readers.begin(), readers.end());
     globalTime = time[0];
     lk.unlock();
-    while(true) {
-    }
 }
 
 
-
+/*
 void JEventMerge::process()
 {
-    glob_t globbuf;
-    glob(infile.c_str(), GLOB_TILDE, NULL ,&globbuf);
-
-
-    // A passive thread pool is created. Initially all threads will start. If the first event time
-    // stamo is greater than the global time, they go to slepp. 
-    std::vector<std::thread> pool;
-    for(unsigned int i=0; j<globbuf.gl_pathc; ++i)
-        pool.push_back(std::thread(&processLog, string(globbuf.gl_pathv[i]),i));
-    std::for_each(pool.begin(),pool.end(),std::mem_fn(&std::thread::join));
     
     // A coordinator thread evaluates wich threads can be woken.
     std::thread poolManager(&coordinator);
@@ -200,4 +202,4 @@ void JEventMerge::process()
     out += "]";
     rosw << out;
     rosw.close();
-}
+} */
