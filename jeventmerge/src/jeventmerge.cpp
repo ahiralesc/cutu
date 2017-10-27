@@ -76,10 +76,21 @@ int main(int argc, char** argv)
 } 
 
 
-
+/**
+* 1. Load log, purge, and store onto a vector 
+*
+*/
 void JEventMerge::logReader(string log, int i) {
     JSONTraceBuffIOS reader(log);
+    std::vector<tuple> l;
 
+    while(!reader.empty()){
+        Trace trace = reader.next();
+        TT tuple{trace,i};
+        l.push_back(tuple);
+    }
+
+/*
     if(!reader.empty()){
         RCB rcb;
         rcb.id = std::this_thread::get_id();
@@ -96,6 +107,13 @@ void JEventMerge::logReader(string log, int i) {
     barrier.wait();
     if( i == 0 ) 
         trec.notify_one();
+*/
+  /*  do{
+        std::unique_lock<std::mutex> lk(revet);
+        rcv.wait(lk, [this] {return turn == i;});
+        lk.unlock();
+
+    }while(1);*/
 }
 
 

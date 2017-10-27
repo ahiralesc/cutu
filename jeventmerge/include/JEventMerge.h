@@ -21,6 +21,19 @@ class JEventMerge{
         JSONTraceBuffIOS *breader;
     };
 
+    // Trace Tuple
+    struct Tuple {
+        std::unsigned long long jid;
+        std::vector<int> log_id;
+        std::vector<Event> ev;
+
+        Tupe(Trace &trace, int logid) {
+            tid = trace.get_tid();
+            log_id = logid;
+            ev = trace.events();
+        }
+    };
+
     // Command line arguments
     std::string infile;
     std::string aos;
