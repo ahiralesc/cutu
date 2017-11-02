@@ -1,38 +1,24 @@
 #ifndef _JEVENT_MERGE_
 #define _JEVENT_MERGE_
 
-#include <map>
-#include <climits>
+//#include <map>
 #include <thread>
 #include <condition_variable>
 #include <string>
-#include <queue>
+//#include <queue>
 #include <boost/dynamic_bitset.hpp>
-#include "Trace.h"
-#include "JSONTraceBuffIOS.h"
+//#include "Trace.h"
+//#include "JSONTraceBuffIOS.h"
 #include "Barrier.h"
+#include "OnlineDataStrmDup.h"
 
 class JEventMerge{
-    private:
-
+private:
     // Reader control block
-    struct RCB { 
+/*    struct RCB { 
         std::thread::id id;
         JSONTraceBuffIOS *breader;
-    };
-
-    // Trace Tuple
-    struct Tuple {
-        std::unsigned long long jid;
-        std::vector<int> log_id;
-        std::vector<Event> ev;
-
-        Tupe(Trace &trace, int logid) {
-            tid = trace.get_tid();
-            log_id = logid;
-            ev = trace.events();
-        }
-    };
+    };*/
 
     // Command line arguments
     std::string infile;
@@ -45,18 +31,19 @@ class JEventMerge{
     std::condition_variable trec;   // Time recorded completion event
     Barrier barrier{0};             // log reader barrier
 
+    // Data stream duplicates
+    MapDataStream<unsigned long long> dsd; 
+
     // Log and log reader state
     boost::dynamic_bitset<> state;
-    std::map<int,RCB> readers;
+    //std::map<int,RCB> readers;
 
-    // Global time
-    unsigned long long globalTime{ULLONG_MAX};
 public:
 
     void logReader(std::string log, int i);
     void coordinator();
-
-    /*
+/*
+    
     std::priority_queue<ETrace::Trace, std::vector<ETrace::Trace>,
     ETrace::StartTimeComparator> queue;
     std::map<std::string,ETrace::Trace> traces;
@@ -68,7 +55,6 @@ public:
     
     JEventMerge(std::string in_file, std::string _aos, std::string _ros) :
     infile{in_file}, aos{_aos}, ros{_ros} { };
-    //void process();
 };
 
 #endif

@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
+#find_package(Boost COMPONENTS thread REQUIRED)
   
 # Header location
 include_directories(../trace/include)
