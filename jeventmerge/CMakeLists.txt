@@ -5,31 +5,25 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
-#find_package(Boost COMPONENTS thread REQUIRED)
   
 # Header location
-include_directories(../trace/include)
-include_directories(include)
+include_directories(../trace/include include ${Boost_INCLUDE_DIRS})
 
 # Library location
 set(PROJECT_LINK_LIBS libtrace.so pthread)
-link_directories( lib )
+link_directories(lib ${Boost_LIBRARY_DIRS})
 
 # Source location
-# file(GLOB SOURCES "src/*.cpp")
-set(SOURCE "src/jeventmerge.cpp")
-# set(DEPENDENCY "src/JSONTraceBuffIOS.cpp")
-#file(GLOB_RECURSE DEPENDENCIES "src/dependencies/*.cpp")
+file(GLOB SOURCES "src/*.cpp")
 
 # Executable target
-# add_executable(jeventmerge ${SOURCE} ${DEPENDENCY})
-add_executable(jeventmerge ${SOURCE})
+add_executable(jeventmerge ${SOURCES})
 
 # Link libraries to executable target
-target_link_libraries(jeventmerge ${PROJECT_LINK_LIBS})
+target_link_libraries(jeventmerge ${PROJECT_LINK_LIBS} ${Boost_LIBRARIES})
 
 # The location were the binary executable will be install
-install(TARGETS jeventmerge DESTINATION /home/ahiralesc/mysrc/cpp/guct/bin)
+# install(TARGETS jeventmerge DESTINATION /home/ahiralesc/mysrc/cpp/guct/bin)
 
 
 # Uncomment to enable unit test cases

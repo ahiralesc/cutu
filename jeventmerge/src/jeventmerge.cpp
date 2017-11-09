@@ -2,6 +2,7 @@
 //#include <fstream>
 //#include <rapidjson/document.h>
 #include <glob.h>
+#include <set>
 //#include <cmath>
 //#include <climits>
 //#include <thread>
@@ -10,10 +11,9 @@
 #include "tclap/CmdLine.h"
 #include "JEventMerge.h"
 #include "JSONTraceBuffIOS.h"
-#include "OnlineDataStrmDup.h"
+#include "Trace.h"
 
-//using namespace ETrace;
-//using namespace Event;
+using namespace ETrace;
 using namespace TCLAP;
 using namespace std;
 
@@ -84,12 +84,47 @@ int main(int argc, char** argv)
 * itLabel tasks as either complete or incomplete
 *
 */
-void JEventMerge::logReader(string log, int i) {
+void JEventMerge::findDuplicates(string log, int chunk) {
     JSONTraceBuffIOS reader(log);
+    do{
+        std::unique_lock<std::mutex> lk(fdm);
+        if(!available){
+            available= true;
+            auto n = chunk;
+            while(--n!=0) {
+                Trace trace = reader.next();
+                if(trace.size()!=0) {
+                    auto val = trace.get_tid();
+                    dsd.insert(val);
+                }
+            }
+            n = chunk;
+            available = false; 
+            fdcv.notify_one();
+            std::this_thread::yield();
+        } else
+            fdcv.wait(lk,[this]{ return !available;});
+    }while(!reader.empty());
+}
+
+
+void JEventMerge::createLookupTable(){
+    std::set<unsigned long long> dup = dsd.getDuplicates();
+//    for(unsigned long long val : dup)
+//        duplicates.add_or_update_mapping(val, val); 
+}
+
+
+
+void JEventMerge::logReader(string log, int i) {
+    findDuplicates(log, 1000);
+    rsm.lock();
+        state[i] = 1;
+    rsm.unlock();
+    barrier.wait();
+    if( i == 0)
+        ccv.notify_one();
     
-    while(!reader.empty()){
-        dsd.insert(reader.get_taskid());
-    }        
 }
 
 
@@ -107,7 +142,7 @@ void JEventMerge::coordinator( )
     std::cout << "Bitacoras: " << globbuf.gl_pathc << std::endl;
     barrier.reset(globbuf.gl_pathc);
 
-    // Set the size of the readers state
+    // Create as many readers as logs found
     boost::dynamic_bitset<> st(globbuf.gl_pathc);
     state = std::move(st);
     
@@ -116,10 +151,11 @@ void JEventMerge::coordinator( )
         pool.push_back(std::thread(&JEventMerge::logReader, this, string(globbuf.gl_pathv[i]), i));
     std::for_each(pool.begin(), pool.end(), std::mem_fn(&std::thread::join));
 
-/*    std::unique_lock<std::mutex> lk(gtm);    
-    trec.wait(lk, [this]{return state.all();}); 
-    std::cout << "El tiempo global es : " << globalTime << std::endl;
-    lk.unlock();*/
+    // Create a thread safe lookup table 
+    std::unique_lock<std::mutex> lk(csm);
+    ccv.wait(lk,[this]{ return state.all();});
+    createLookupTable();
+    lk.unlock();
 
     globfree(&globbuf);
 }

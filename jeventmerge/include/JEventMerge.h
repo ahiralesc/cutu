@@ -11,32 +11,37 @@
 //#include "JSONTraceBuffIOS.h"
 #include "Barrier.h"
 #include "OnlineDataStrmDup.h"
+#include "threadsafe_lookup_table.h"
 
 class JEventMerge{
 private:
-    // Reader control block
-/*    struct RCB { 
-        std::thread::id id;
-        JSONTraceBuffIOS *breader;
-    };*/
-
     // Command line arguments
     std::string infile;
     std::string aos;
     std::string ros;
 
-    // Mutex for concurrent parsing of logs
-    std::mutex gtm;                 // Global time mutex
-    std::mutex stm;                 // Reader state mutex
-    std::condition_variable trec;   // Time recorded completion event
+    // Find duplicate mutex
+    std::mutex fdm;                 // Find duplicate mutex
+    std::condition_variable fdcv;   // Find duplicate condition variable
+    bool available;
+
+    std::mutex rsm;                 // Reader state mutex
+    std::mutex csm;                 // Coordinator syncronization mutex
+    std::condition_variable ccv;    // Coordinator contion variable
     Barrier barrier{0};             // log reader barrier
+
 
     // Data stream duplicates
     MapDataStream<unsigned long long> dsd; 
+    TSLT::threadsafe_lookup_table<unsigned long long, unsigned long long,
+    std::hash<unsigned long long>> duplicates;
+    
 
     // Log and log reader state
     boost::dynamic_bitset<> state;
-    //std::map<int,RCB> readers;
+
+    void findDuplicates(std::string log, int chunck);
+    void createLookupTable();
 
 public:
 
@@ -54,7 +59,7 @@ public:
 
     
     JEventMerge(std::string in_file, std::string _aos, std::string _ros) :
-    infile{in_file}, aos{_aos}, ros{_ros} { };
+    infile{in_file}, aos{_aos}, ros{_ros} { available = false; };
 };
 
 #endif
