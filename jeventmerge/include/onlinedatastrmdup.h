@@ -1,3 +1,18 @@
+/* Copyright 2017 The CUTU Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
 #ifndef __Online_Data_Stream_Duplicates_
 #define __Online_Data_Stream_Duplicated_
 
@@ -16,6 +31,11 @@ public:
         bool st = reg.insert(std::pair<T,T>(element,element)).second;
         if(!st) duplicates.insert(element);
         return st;
+    }
+    
+    void clear() {
+        reg.clear();
+        duplicates.clear();
     }
 
 private:
@@ -36,6 +56,11 @@ public:
                 v[std::abs(v[i])] = -1 * v[std::abs(v[i])];
             else
                 duplicates.insert(std::abs(v[i]));
+    }
+
+    void clear() {
+        duplicates.clear();
+        v.clear(); 
     }
 
 private:
