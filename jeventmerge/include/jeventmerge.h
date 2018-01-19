@@ -42,15 +42,15 @@ private:
 
 
     // Data stream duplicates
-    MapDataStream<unsigned long long> dsd; 
+    // MapDataStream<unsigned long long> dsd; 
     threadsafe_lookup_table<unsigned long long, unsigned long long> duplicates;
     
 
     // Log and log reader state
     boost::dynamic_bitset<> state;
 
-    void loadTraceIDs(std::string);
-    void buildLookupTable();
+    std::unique_ptr<MapDataStream<unsigned long long>> loadTraceIDs(std::string);
+    void buildLookupTable(std::unique_ptr<MapDataStream<unsigned long long>>);
     void uniqueEventFilter(std::string);
     void logReader(std::string, int);
 

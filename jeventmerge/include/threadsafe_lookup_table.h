@@ -36,7 +36,8 @@ public:
     Value at(Key const& key,Value const& default_value) const {
         boost::shared_lock<boost::shared_mutex> lock(mutex);
         bucket_iterator const entry=find(key);
-        return (entry==data.end())? default_value:entry->second;
+        //return (entry==data.end())? default_value:entry->second;
+        return default_value;
     }
 
     void insert(Key const& key,Value const& value) {
@@ -83,6 +84,7 @@ public:
 
     threadsafe_lookup_table(threadsafe_lookup_table const& other) = delete;
     threadsafe_lookup_table& operator=(threadsafe_lookup_table const& other)=delete;
+    
     Value at(Key const& key,Value const& default_value=Value()) const {
         return get_bucket(key).at(key,default_value);
     }
